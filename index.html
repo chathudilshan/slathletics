@@ -288,7 +288,13 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
       <!-- Athletes -->
       <div class="summary-panel">
         <div class="summary-panel-head">
-          <div class="summary-panel-title">Most Decorated Athletes</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div class="summary-panel-title" style="margin-bottom:0">Most Decorated Athletes</div>
+            <div style="display:flex;gap:4px">
+              <button class="df-btn active" id="sort-total-btn" onclick="setAthSort('total')" style="padding:3px 10px;font-size:10px">By total</button>
+              <button class="df-btn" id="sort-gold-btn" onclick="setAthSort('gold')" style="padding:3px 10px;font-size:10px">By gold</button>
+            </div>
+          </div>
           <input class="summary-search" id="ath-search" placeholder="Search athlete..." oninput="filterAthList()">
         </div>
         <div class="summary-col-head ath-col-head">
@@ -498,7 +504,14 @@ function renderMedals(){
 }
 
 // ── MEDAL SUMMARY ─────────────────────────────────────────────────
-var athData=[], compData=[], detailChart=null;
+var athData=[], compData=[], detailChart=null, athSortMode='total';
+
+function setAthSort(mode){
+  athSortMode=mode;
+  document.getElementById('sort-total-btn').classList.toggle('active', mode==='total');
+  document.getElementById('sort-gold-btn').classList.toggle('active', mode==='gold');
+  filterAthList();
+}
 
 function renderSummary(){
   if(!mData.length)return;
@@ -521,12 +534,18 @@ function renderSummary(){
 
 function filterAthList(){
   var q=(document.getElementById('ath-search')||{value:''}).value.toLowerCase();
-  var filtered=athData.filter(function(a){return !q||a.name.toLowerCase().indexOf(q)>=0;});
+  var list=athData.slice();
+  if(athSortMode==='total'){
+    list.sort(function(a,b){return(b.Gold+b.Silver+b.Bronze)-(a.Gold+a.Silver+a.Bronze)||b.Gold-a.Gold||b.Silver-a.Silver;});
+  } else {
+    list.sort(function(a,b){return b.Gold-a.Gold||b.Silver-a.Silver||b.Bronze-a.Bronze;});
+  }
+  var filtered=list.filter(function(a){return !q||a.name.toLowerCase().indexOf(q)>=0;});
   var html='';
   for(var i=0;i<filtered.length;i++){
     var a=filtered[i];
     html+='<div class="summary-row ath-row" onclick="openAthleteDetail(\''+encodeURIComponent(a.name)+'\')">'
-      +'<div class="rank-num">'+(athData.indexOf(a)+1)+'</div>'
+      +'<div class="rank-num">'+(i+1)+'</div>'
       +'<div class="ath-name">'+a.name+'</div>'
       +'<div class="medal-count mc-g">'+a.Gold+'</div>'
       +'<div class="medal-count mc-s">'+a.Silver+'</div>'
@@ -643,8 +662,6 @@ function renderCompDetailBody(name){
   body+='<div class="detail-filters">'
     +'<button class="df-btn'+(mf==='All'?' active':'')+'" onclick="setCompFilter(\'All\',null,\''+encodeURIComponent(name)+'\')">All medals</button>'
     +'<button class="df-btn gold'+(mf==='Gold'?' active':'')+'" onclick="setCompFilter(\'Gold\',null,\''+encodeURIComponent(name)+'\')">Gold only</button>'
-    +'<button class="df-btn silver'+(mf==='Silver'?' active':'')+'" onclick="setCompFilter(\'Silver\',null,\''+encodeURIComponent(name)+'\')">Silver only</button>'
-    +'<button class="df-btn bronze'+(mf==='Bronze'?' active':'')+'" onclick="setCompFilter(\'Bronze\',null,\''+encodeURIComponent(name)+'\')">Bronze only</button>'
     +'</div>'
     +'<div class="detail-filters" style="margin-top:-6px">'
     +'<button class="df-btn'+(gf==='All'?' active':'')+'" onclick="setCompFilter(null,\'All\',\''+encodeURIComponent(name)+'\')">All genders</button>'
