@@ -171,7 +171,7 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
       <button class="nav-tab active" onclick="switchTab('medals',this)">Medals</button>
       <button class="nav-tab" onclick="switchTab('participants',this)">Participants</button>
       <button class="nav-tab" onclick="switchTab('records',this)">National Records</button>
-      <button class="nav-tab" onclick="switchTab('qual',this)">Qualifications</button>
+      <button class="nav-tab" onclick="switchTab('qual',this)">Qualifications - 2026</button>
     </div>
     <div class="lk-badge">LK</div>
   </div>
@@ -326,7 +326,7 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
 <!-- QUALIFICATIONS -->
 <div id="tab-qual" class="tab-content">
   <div class="inner">
-    <div class="page-headline">2026 Qualification Standards Tracker</div>
+          <div class="page-headline">2026 Qualification Standards Tracker</div>
     <div class="qual-champ-selector">
       <button class="champ-btn active" onclick="qSelectChamp(this,'Asian Games')">Asian Games</button>
       <button class="champ-btn" onclick="qSelectChamp(this,'Commonwealth')">Commonwealth Games</button>
@@ -455,10 +455,17 @@ function switchTab(name, btn) {
 // ── PERFORMANCE PARSING ─────────────────────────────────────────
 function parsePerf(s) {
   if (!s) return null;
-  s = s.toString().trim().replace(/[()]/g, '');
+  s = s.toString().trim().replace(/[()]/g, '').trim();
+  // handle MM:SS.ss or H:MM:SS.ss or MM:SS
   var parts = s.split(':');
-  if (parts.length === 3) return (+parts[0]) * 3600 + (+parts[1]) * 60 + (+parts[2]);
-  if (parts.length === 2) return (+parts[0]) * 60 + (+parts[1]);
+  if (parts.length === 3) {
+    // H:MM:SS.ss
+    return (+parts[0]) * 3600 + (+parts[1]) * 60 + parseFloat(parts[2]);
+  }
+  if (parts.length === 2) {
+    // MM:SS or MM:SS.ss — leading zeros ok (e.g. 01:47.50)
+    return (+parts[0]) * 60 + parseFloat(parts[1]);
+  }
   var n = parseFloat(s);
   return isNaN(n) ? null : n;
 }
@@ -467,37 +474,45 @@ function isFieldEvent(ev) {
   return /jump|vault|throw|put|hammer|discus|javelin|shot|triple|long|high|pole/i.test(ev);
 }
 
+// hurdles and throwing events are age-specific (equipment differs)
 function isAgeSpecific(ev) {
-  return /hur|throw|put|hammer|discus|javelin|shot/i.test(ev);
+  return /\bh\b|hur|throw|put|hammer|discus|javelin|shot/i.test(ev);
+}
+
+// Normalise event name for matching between the two sheets
+// Strips extra spaces, lowercases, collapses variants like "110mH" vs "110m H"
+function normEvent(ev) {
+  if (!ev) return '';
+  return ev.toString().toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/\s*h$/,'h')          // "400m H" -> "400mh"
+    .replace(/\s*h\s/g,'h ')       // "110m H " -> "110mh "
+    .replace(/\s*sc$/,'sc')        // "3000m SC" -> "3000msc"
+    .replace(/st ch/,'sc')         // "3000m St Ch" -> "3000m sc"
+    .replace(/st\. ch/,'sc')
+    .replace(/\s*rw$/,'rw')        // "20km RW" -> "20kmrw"
+    .replace(/10km rw/,'10000m rw')
+    .replace(/\s/g,'');            // remove all spaces for final compare
 }
 
 function parseAthletes(cell) {
   if (!cell || cell.trim() === '' || cell.trim() === '-') return [];
   var results = [];
-  var re = /([^,()\n]+?)\s*\(([^)]+)\)/g;
+  // match: Name (perf) — handles names with spaces, initials, dots
+  var re = /([^,\n(]+?)\s*\(([^)]+)\)/g;
   var m;
   while ((m = re.exec(cell)) !== null) {
     var name = m[1].trim();
     var perfRaw = m[2].trim();
-    if (name) results.push({name: name, perfRaw: perfRaw, perfVal: parsePerf(perfRaw)});
-  }
-  if (results.length === 0) {
-    var parts = cell.split(',');
-    for (var i = 0; i < parts.length; i++) {
-      var part = parts[i].trim();
-      var tokens = part.split(/\s+/);
-      if (tokens.length >= 2) {
-        var perfRaw = tokens[tokens.length - 1];
-        var name = tokens.slice(0, tokens.length - 1).join(' ');
-        results.push({name: name, perfRaw: perfRaw, perfVal: parsePerf(perfRaw)});
-      }
+    if (name && perfRaw) {
+      results.push({name: name, perfRaw: perfRaw, perfVal: parsePerf(perfRaw)});
     }
   }
   return results;
 }
 
 function meetsStandard(perfVal, stdVal, ev) {
-  if (perfVal === null || stdVal === null) return false;
+  if (perfVal === null || stdVal === null || isNaN(perfVal) || isNaN(stdVal)) return false;
   return isFieldEvent(ev) ? perfVal >= stdVal : perfVal <= stdVal;
 }
 
@@ -577,10 +592,13 @@ function renderQual() {
     if (!stdRaw || stdRaw.trim() === '' || stdRaw.trim() === '-') continue;
     var stdVal = parsePerf(stdRaw);
 
+    // match best row using normalised event name
     var bestRow = null;
+    var normEv = normEvent(ev);
     for (var j = 0; j < qBestData.length; j++) {
-      if (qBestData[j]['Gender'] === gender && qBestData[j]['Event'] === ev) {
-        bestRow = qBestData[j]; break;
+      var bd = qBestData[j];
+      if ((bd['Gender'] === gender) && (normEvent(bd['Event']) === normEv)) {
+        bestRow = bd; break;
       }
     }
 
