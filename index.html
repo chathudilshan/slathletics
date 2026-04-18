@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SLATHLETICS | STATS-ZONE</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#07090f;color:#e2e8f0;display:flex;flex-direction:column}
+:root{--gold:#f0c040;--silver:#b0bec5;--bronze:#bf8650;--card:#0f1623;--border:#1b2d4a;--blue2:#2589c7;--blue3:#4db3f0;--muted:#607080}
+header{background:#080d18;border-bottom:1px solid var(--border);padding:0 2rem;flex-shrink:0}
+.header-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center}
+.logo{display:flex;align-items:center;gap:10px;padding:.7rem 1.5rem .7rem 0;border-right:1px solid var(--border);flex-shrink:0}
+.logo-emblem{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--blue2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-emblem svg{width:18px;height:18px}
+.logo-text{font-size:17px;font-weight:700;letter-spacing:2.5px;color:#fff;white-space:nowrap}
+.logo-sub{font-size:9px;color:var(--blue3);letter-spacing:3px;margin-top:2px}
+.nav-tabs{display:flex;flex:1;align-items:center;padding:0 1.5rem;gap:6px}
+.nav-tab{background:transparent;border:1px solid transparent;color:var(--muted);padding:5px 16px;font-size:12px;cursor:pointer;border-radius:20px;transition:all .2s;letter-spacing:.5px;font-weight:500}
+.nav-tab:hover{color:#e2e8f0;border-color:var(--border)}
+.nav-tab.active{color:#07090f;background:var(--blue3);border-color:var(--blue3)}
+.lk-badge{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--blue2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--blue3);letter-spacing:1px;margin-left:auto;flex-shrink:0}
+main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.tab-content{display:none;flex:1;overflow:hidden;flex-direction:column;min-height:0}
+.tab-content.active{display:flex}
+.inner{max-width:1400px;width:100%;margin:0 auto;padding:.9rem 2rem .8rem;flex:1;overflow:hidden;display:flex;flex-direction:column;gap:8px;min-height:0}
+.page-headline{font-size:14px;font-weight:600;color:#fff;letter-spacing:.5px;padding-bottom:.6rem;border-bottom:1px solid var(--border);flex-shrink:0}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;flex-shrink:0}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.6rem .9rem;display:flex;align-items:center;gap:10px}
+.stat-icon{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.si-t{background:#0e2040;color:var(--blue3)}.si-g{background:#2a1f00;color:var(--gold)}.si-s{background:#1a1f22;color:var(--silver)}.si-b{background:#231508;color:var(--bronze)}
+.stat-num{font-size:20px;font-weight:700;line-height:1}
+.stat-label{font-size:10px;color:var(--muted);margin-top:1px;letter-spacing:.4px}
+.sn-t{color:var(--blue3)}.sn-g{color:var(--gold)}.sn-s{color:var(--silver)}.sn-b{color:var(--bronze)}
+.filters{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.7rem .9rem;flex-shrink:0;display:flex;flex-direction:column;gap:7px}
+.filter-row{display:grid;gap:8px}
+.f8{grid-template-columns:repeat(8,1fr)}
+.f4{grid-template-columns:repeat(4,1fr)}
+.f1{grid-template-columns:1fr}
+.filter-group{display:flex;flex-direction:column;gap:3px}
+.filter-label{font-size:9px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase}
+select,input{width:100%;background:#0a1020;border:1px solid var(--border);color:#e2e8f0;padding:5px 8px;border-radius:6px;font-size:12px;outline:none;appearance:none;-webkit-appearance:none;transition:border .15s}
+select:hover,input:hover,select:focus,input:focus{border-color:var(--blue2)}
+input::placeholder{color:var(--muted)}
+.filter-toggle-btn{display:none}
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;flex:1;display:flex;flex-direction:column;min-height:0}
+.table-scroll{overflow-y:auto;overflow-x:hidden;flex:1;min-height:0}
+table{table-layout:fixed;width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:#080d18;color:var(--blue3);padding:8px 10px;text-align:left;font-weight:500;font-size:10px;letter-spacing:.7px;text-transform:uppercase;position:sticky;top:0;z-index:1;cursor:pointer;user-select:none;white-space:nowrap;border-bottom:1px solid var(--border)}
+thead th:hover{color:#fff}
+.sa{opacity:.4;margin-left:3px;font-size:9px}
+tbody tr{border-bottom:1px solid #0e1622;transition:background .12s}
+tbody tr:hover{background:#111a2a}
+td{padding:7px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+td.athlete{white-space:normal;word-break:break-word;line-height:1.35;font-weight:500;color:#fff}
+td.venue{color:var(--muted)}
+td.perf{font-family:'Courier New',monospace;color:var(--blue3);font-size:11px}
+.medal-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.medal-Gold{background:#1f1500;color:var(--gold);border:1px solid #3a2a00}
+.medal-Silver{background:#141618;color:var(--silver);border:1px solid #2a2e32}
+.medal-Bronze{background:#180f05;color:var(--bronze);border:1px solid #2e1e0a}
+.medal-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.dot-Gold{background:var(--gold)}.dot-Silver{background:var(--silver)}.dot-Bronze{background:var(--bronze)}
+.gender-Men{color:#4db3f0;font-size:11px}.gender-Women{color:#f48fb1;font-size:11px}
+td.round{font-family:'Courier New',monospace;font-size:11px;text-align:center}
+td.round.empty{color:var(--muted)}
+td.round.progressed{background:#0d2918;color:#7ecf9a;border-left:2px solid #2d7a45}
+td.round.medal1{background:#3a2800;color:var(--gold);border-left:2px solid var(--gold)}
+td.round.medal2{background:#1e2024;color:var(--silver);border-left:2px solid var(--silver)}
+td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var(--bronze)}
+.qual-champ-selector{display:flex;flex-wrap:wrap;gap:8px;flex-shrink:0}
+.champ-btn{background:#0a1020;border:1px solid var(--border);color:var(--muted);padding:7px 18px;border-radius:20px;font-size:12px;cursor:pointer;transition:all .2s;font-weight:500}
+.champ-btn:hover{color:#e2e8f0;border-color:var(--blue2)}
+.champ-btn.active{background:var(--blue2);border-color:var(--blue2);color:#fff}
+.qual-filters{display:flex;gap:10px;flex-shrink:0;align-items:flex-end}
+.qual-filters .filter-group{min-width:140px}
+.qual-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;flex:1;display:flex;flex-direction:column;min-height:0}
+.qual-table-scroll{overflow-y:auto;flex:1;min-height:0}
+.qual-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.qual-table colgroup col:nth-child(1){width:70px}
+.qual-table colgroup col:nth-child(2){width:140px}
+.qual-table colgroup col:nth-child(3){width:100px}
+.qual-table colgroup col:nth-child(4){width:auto}
+.qual-table thead th{background:#080d18;color:var(--blue3);padding:8px 12px;text-align:left;font-weight:500;font-size:10px;letter-spacing:.7px;text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--border)}
+.qual-table tbody tr{border-bottom:1px solid #0e1622;transition:background .12s}
+.qual-table tbody tr:hover{background:#111a2a}
+.qual-table td{padding:8px 12px;font-size:12px;vertical-align:top}
+.qual-table td.std{font-family:'Courier New',monospace;color:#ffa040;font-size:11px}
+.athlete-chip{display:inline-flex;align-items:center;gap:5px;background:#0e1e35;border:1px solid var(--border);border-radius:6px;padding:3px 9px;margin:2px 3px 2px 0;font-size:11px;white-space:nowrap}
+.chip-name{color:#e2e8f0;font-weight:500}
+.chip-perf{color:var(--blue3);font-family:'Courier New',monospace;font-size:10px}
+.no-qual{color:var(--muted);font-size:11px;font-style:italic}
+.qual-summary{display:flex;gap:12px;flex-shrink:0;flex-wrap:wrap}
+.qs-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.55rem 1rem;display:flex;align-items:center;gap:10px}
+.qs-num{font-size:18px;font-weight:700;color:var(--blue3)}
+.qs-label{font-size:10px;color:var(--muted);letter-spacing:.4px}
+.table-footer{display:flex;align-items:center;justify-content:space-between;padding:.5rem .9rem;border-top:1px solid var(--border);flex-shrink:0}
+.page-info{font-size:11px;color:var(--muted)}
+.pagination{display:flex;align-items:center;gap:4px}
+.pg-btn{background:#0a1020;border:1px solid var(--border);color:#e2e8f0;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .15s}
+.pg-btn:hover:not(:disabled){border-color:var(--blue2);color:var(--blue3)}
+.pg-btn:disabled{opacity:.3;cursor:default}
+.pg-num{display:flex;gap:3px}
+.pg-n{background:transparent;border:1px solid transparent;color:var(--muted);padding:4px 7px;border-radius:6px;font-size:11px;cursor:pointer;min-width:26px;text-align:center;transition:all .15s}
+.pg-n:hover{color:#e2e8f0}
+.pg-n.active{background:#0e2040;border-color:var(--blue2);color:var(--blue3);font-weight:600}
+.loading{text-align:center;padding:3rem;color:var(--muted);flex-shrink:0}
+.loading-dot{display:inline-block;animation:pulse 1.4s ease-in-out infinite;font-size:16px;margin:0 3px}
+@keyframes pulse{0%,100%{opacity:.2}50%{opacity:1}}
+@media(max-width:768px){
+  html,body{overflow:auto;height:auto}
+  main{overflow:auto;flex:none}
+  .tab-content{overflow:auto;flex:none}
+  .tab-content.active{display:block}
+  header{padding:0 1rem}
+  .header-inner{flex-wrap:wrap}
+  .logo{border-right:none;padding:.6rem 0;flex:1}
+  .logo-text{font-size:15px;letter-spacing:2px}
+  .logo-emblem{width:30px;height:30px}
+  .lk-badge{width:30px;height:30px;font-size:10px}
+  .nav-tabs{padding:.5rem 0 .6rem;width:100%;border-top:1px solid var(--border);order:3;gap:5px;flex-wrap:wrap}
+  .nav-tab{padding:5px 12px;font-size:11px}
+  .inner{padding:.8rem 1rem;gap:8px;overflow:visible;flex:none}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .stat-num{font-size:18px}
+  .filter-toggle-btn{display:flex;align-items:center;justify-content:space-between;width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.6rem .9rem;color:#e2e8f0;font-size:13px;cursor:pointer;flex-shrink:0}
+  .filter-toggle-btn .ftb-label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500}
+  .filter-toggle-btn .ftb-arrow{font-size:10px;color:var(--muted);transition:transform .2s}
+  .filter-toggle-btn.open .ftb-arrow{transform:rotate(180deg)}
+  .filter-count{background:var(--blue2);color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;min-width:18px;text-align:center}
+  .filters{display:none;border-radius:0 0 10px 10px;border-top:none;margin-top:-2px}
+  .filters.open{display:flex}
+  .filter-row.f8{grid-template-columns:repeat(2,1fr)}
+  .filter-row.f4{grid-template-columns:repeat(2,1fr)}
+  .table-wrap{border-radius:10px;flex:none;margin-bottom:.5rem}
+  .table-scroll{overflow-x:auto;overflow-y:auto;max-height:55vh;flex:none}
+  table{table-layout:auto;min-width:700px}
+  #p-table{min-width:900px}
+  td,thead th{padding:7px 10px;font-size:11px}
+  .qual-champ-selector{gap:6px}
+  .champ-btn{padding:6px 12px;font-size:11px}
+  .qual-table-wrap{flex:none;margin-bottom:.5rem;max-height:60vh}
+  .qual-filters{flex-wrap:wrap}
+  .qs-card{padding:.45rem .8rem}
+  .qs-num{font-size:15px}
+  .table-footer{flex-wrap:wrap;gap:4px}
+  .pg-btn{padding:4px 8px;font-size:10px}
+  .page-info{font-size:10px;width:100%}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-emblem">
+        <svg viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="8" r="3" stroke="#4db3f0" stroke-width="1.5"/>
+          <path d="M6 20c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="#4db3f0" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M12 14v2M9 18l3-2 3 2" stroke="#4db3f0" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-text">SLATHLETICS</div>
+        <div class="logo-sub">STATS · ZONE</div>
+      </div>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('medals',this)">Medals</button>
+      <button class="nav-tab" onclick="switchTab('participants',this)">Participants</button>
+      <button class="nav-tab" onclick="switchTab('records',this)">National Records</button>
+      <button class="nav-tab" onclick="switchTab('qual',this)">Qualifications</button>
+    </div>
+    <div class="lk-badge">LK</div>
+  </div>
+</header>
+<main>
+
+<!-- MEDALS -->
+<div id="tab-medals" class="tab-content active">
+  <div class="inner">
+    <div class="page-headline">Medal Winners in Regional Championships</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon si-t">&#9670;</div><div><div class="stat-num sn-t" id="m-total">0</div><div class="stat-label">Total Medals</div></div></div>
+      <div class="stat-card"><div class="stat-icon si-g">&#9679;</div><div><div class="stat-num sn-g" id="m-gold">0</div><div class="stat-label">Gold</div></div></div>
+      <div class="stat-card"><div class="stat-icon si-s">&#9679;</div><div><div class="stat-num sn-s" id="m-silver">0</div><div class="stat-label">Silver</div></div></div>
+      <div class="stat-card"><div class="stat-icon si-b">&#9679;</div><div><div class="stat-num sn-b" id="m-bronze">0</div><div class="stat-label">Bronze</div></div></div>
+    </div>
+    <button class="filter-toggle-btn" id="m-filter-btn" onclick="toggleFilters('m')">
+      <span class="ftb-label">&#9776; Filters <span class="filter-count" id="m-fcount">0</span></span>
+      <span class="ftb-arrow">&#9660;</span>
+    </button>
+    <div class="filters" id="m-filters">
+      <div class="filter-row f8">
+        <div class="filter-group"><div class="filter-label">Region</div><select id="m-region"><option value="">All</option></select></div>
+        <div class="filter-group"><div class="filter-label">Category</div><select id="m-category"><option value="">All</option></select></div>
+        <div class="filter-group"><div class="filter-label">Environment</div><select id="m-environment"><option value="">All</option></select></div>
+        <div class="filter-group"><div class="filter-label">Competition</div><select id="m-comp"><option value="">All</option></select></div>
+        <div class="filter-group"><div class="filter-label">Year</div><select id="m-year"><option value="">All</option></select></div>
+        <div class="filter-group"><div class="filter-label">Gender</div><select id="m-gender"><option value="">All</option></select></div>
+        <div class="filter-group"><div class="filter-label">Medal</div><select id="m-medal"><option value="">All</option><option>Gold</option><option>Silver</option><option>Bronze</option></select></div>
+        <div class="filter-group"><div class="filter-label">Event</div><select id="m-event"><option value="">All</option></select></div>
+      </div>
+      <div class="filter-row f1">
+        <div class="filter-group"><div class="filter-label">Search athlete</div><input id="m-search" placeholder="e.g. Duncan White..." oninput="mResetPage();renderMedals();updateFilterCount('m')"></div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table>
+          <colgroup><col style="width:50px"><col style="width:148px"><col style="width:108px"><col style="width:180px"><col style="width:132px"><col style="width:62px"><col style="width:80px"><col style="width:88px"></colgroup>
+          <thead><tr>
+            <th onclick="mSort('Year')">Year<span class="sa">&#8597;</span></th>
+            <th onclick="mSort('Competition')">Competition<span class="sa">&#8597;</span></th>
+            <th onclick="mSort('Venue')">Venue<span class="sa">&#8597;</span></th>
+            <th onclick="mSort('Name')">Athlete<span class="sa">&#8597;</span></th>
+            <th onclick="mSort('Event')">Event<span class="sa">&#8597;</span></th>
+            <th onclick="mSort('Gender')">Gender<span class="sa">&#8597;</span></th>
+            <th onclick="mSort('Medal')">Medal<span class="sa">&#8597;</span></th>
+            <th onclick="mSort('Performance')">Performance<span class="sa">&#8597;</span></th>
+          </tr></thead>
+          <tbody id="m-tbody"></tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <div class="page-info" id="m-info"></div>
+        <div class="pagination">
+          <button class="pg-btn" id="m-prev" onclick="mChangePage(-1)">&#8592; Prev</button>
+          <div class="pg-num" id="m-nums"></div>
+          <button class="pg-btn" id="m-next" onclick="mChangePage(1)">Next &#8594;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PARTICIPANTS -->
+<div id="tab-participants" class="tab-content">
+  <div class="inner">
+    <div class="page-headline">Participants in Major Championships</div>
+    <button class="filter-toggle-btn" id="p-filter-btn" onclick="toggleFilters('p')">
+      <span class="ftb-label">&#9776; Filters <span class="filter-count" id="p-fcount">0</span></span>
+      <span class="ftb-arrow">&#9660;</span>
+    </button>
+    <div class="filters" id="p-filters">
+      <div class="filter-row f4">
+        <div class="filter-group"><div class="filter-label">Competition</div><select id="p-comp"><option value="">All</option></select></div>
+        <div class="filter-group"><div class="filter-label">Year</div><select id="p-year"><option value="">All</option></select></div>
+        <div class="filter-group"><div class="filter-label">Gender</div><select id="p-gender"><option value="">All</option></select></div>
+        <div class="filter-group"><div class="filter-label">Event</div><select id="p-event"><option value="">All</option></select></div>
+      </div>
+      <div class="filter-row f1">
+        <div class="filter-group"><div class="filter-label">Search athlete</div><input id="p-search" placeholder="e.g. N Ethirweerasingham..." oninput="pResetPage();renderParticipants();updateFilterCount('p')"></div>
+      </div>
+    </div>
+    <div id="p-loading" class="loading">
+      <span class="loading-dot">&#9679;</span><span class="loading-dot" style="animation-delay:.2s">&#9679;</span><span class="loading-dot" style="animation-delay:.4s">&#9679;</span>
+      <p style="margin-top:.8rem;font-size:12px;letter-spacing:1px">LOADING DATA</p>
+    </div>
+    <div class="table-wrap" id="p-table-wrap" style="display:none">
+      <div class="table-scroll">
+        <table id="p-table"><thead><tr id="p-thead-row"></tr></thead><tbody id="p-tbody"></tbody></table>
+      </div>
+      <div class="table-footer">
+        <div class="page-info" id="p-info"></div>
+        <div class="pagination">
+          <button class="pg-btn" id="p-prev" onclick="pChangePage(-1)">&#8592; Prev</button>
+          <div class="pg-num" id="p-nums"></div>
+          <button class="pg-btn" id="p-next" onclick="pChangePage(1)">Next &#8594;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NATIONAL RECORDS -->
+<div id="tab-records" class="tab-content">
+  <div class="inner">
+    <div class="page-headline">National Records</div>
+    <button class="filter-toggle-btn" id="r-filter-btn" onclick="toggleFilters('r')">
+      <span class="ftb-label">&#9776; Filters <span class="filter-count" id="r-fcount">0</span></span>
+      <span class="ftb-arrow">&#9660;</span>
+    </button>
+    <div class="filters" id="r-filters">
+      <div class="filter-row f4">
+        <div class="filter-group"><div class="filter-label">Record Type</div><select id="r-type"><option value="">All</option></select></div>
+        <div class="filter-group"><div class="filter-label">Gender</div><select id="r-gender"><option value="">All</option></select></div>
+        <div class="filter-group"><div class="filter-label">Event</div><select id="r-event"><option value="">All</option></select></div>
+        <div class="filter-group"><div class="filter-label">Search athlete</div><input id="r-search" placeholder="e.g. Yupun Abeykoon..." oninput="rResetPage();renderRecords();updateFilterCount('r')"></div>
+      </div>
+    </div>
+    <div id="r-loading" class="loading">
+      <span class="loading-dot">&#9679;</span><span class="loading-dot" style="animation-delay:.2s">&#9679;</span><span class="loading-dot" style="animation-delay:.4s">&#9679;</span>
+      <p style="margin-top:.8rem;font-size:12px;letter-spacing:1px">LOADING DATA</p>
+    </div>
+    <div class="table-wrap" id="r-table-wrap" style="display:none">
+      <div class="table-scroll">
+        <table>
+          <colgroup><col style="width:140px"><col style="width:130px"><col style="width:62px"><col style="width:100px"><col style="width:185px"><col style="width:120px"><col style="width:90px"></colgroup>
+          <thead><tr>
+            <th onclick="rSort('Record Type')">Record Type<span class="sa">&#8597;</span></th>
+            <th onclick="rSort('Event')">Event<span class="sa">&#8597;</span></th>
+            <th onclick="rSort('Gender')">Gender<span class="sa">&#8597;</span></th>
+            <th onclick="rSort('Performance')">Performance<span class="sa">&#8597;</span></th>
+            <th onclick="rSort('Athlete')">Athlete<span class="sa">&#8597;</span></th>
+            <th onclick="rSort('Venue')">Venue<span class="sa">&#8597;</span></th>
+            <th onclick="rSort('Date')">Date<span class="sa">&#8597;</span></th>
+          </tr></thead>
+          <tbody id="r-tbody"></tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <div class="page-info" id="r-info"></div>
+        <div class="pagination">
+          <button class="pg-btn" id="r-prev" onclick="rChangePage(-1)">&#8592; Prev</button>
+          <div class="pg-num" id="r-nums"></div>
+          <button class="pg-btn" id="r-next" onclick="rChangePage(1)">Next &#8594;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUALIFICATIONS -->
+<div id="tab-qual" class="tab-content">
+  <div class="inner">
+    <div class="page-headline">2026 Qualification Standards Tracker</div>
+    <div class="qual-champ-selector">
+      <button class="champ-btn active" onclick="qSelectChamp(this,'Asian Games')">Asian Games</button>
+      <button class="champ-btn" onclick="qSelectChamp(this,'Commonwealth')">Commonwealth Games</button>
+      <button class="champ-btn" onclick="qSelectChamp(this,'Asian U23')">Asian U23 Championship</button>
+      <button class="champ-btn" onclick="qSelectChamp(this,'World U20')">World U20 Championship</button>
+      <button class="champ-btn" onclick="qSelectChamp(this,'Asian U20')">Asian U20 Championships</button>
+      <button class="champ-btn" onclick="qSelectChamp(this,'National Pool')">National Pool</button>
+    </div>
+    <div class="qual-filters">
+      <div class="filter-group">
+        <div class="filter-label">Gender</div>
+        <select id="q-gender" onchange="renderQual()"><option value="">All</option><option>Men</option><option>Women</option></select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Event</div>
+        <select id="q-event" onchange="renderQual()"><option value="">All</option></select>
+      </div>
+    </div>
+    <div id="q-loading" class="loading">
+      <span class="loading-dot">&#9679;</span><span class="loading-dot" style="animation-delay:.2s">&#9679;</span><span class="loading-dot" style="animation-delay:.4s">&#9679;</span>
+      <p style="margin-top:.8rem;font-size:12px;letter-spacing:1px">LOADING DATA</p>
+    </div>
+    <div id="q-content" style="display:none;flex:1;flex-direction:column;gap:8px;min-height:0">
+      <div class="qual-summary">
+        <div class="qs-card"><div class="qs-num" id="q-s-events">0</div><div class="qs-label">Events with qualifiers</div></div>
+        <div class="qs-card"><div class="qs-num" id="q-s-athletes">0</div><div class="qs-label">Qualified athletes</div></div>
+      </div>
+      <div class="qual-table-wrap">
+        <div class="qual-table-scroll">
+          <table class="qual-table">
+            <colgroup><col><col><col><col></colgroup>
+            <thead><tr><th>Gender</th><th>Event</th><th>Standard</th><th>Qualified Athletes</th></tr></thead>
+            <tbody id="q-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+<script>
+var PER = 100;
+var MEDALS_URL   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQeB6A8k_i3m0sEXUwIBgaGM26yG0Z-OyM9iLVg1SQkLlPHOwo53sC5VLA6OykK7atH2T8eLm09YXyO/pub?gid=934783805&single=true&output=csv';
+var PART_URL     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQeB6A8k_i3m0sEXUwIBgaGM26yG0Z-OyM9iLVg1SQkLlPHOwo53sC5VLA6OykK7atH2T8eLm09YXyO/pub?gid=244021194&single=true&output=csv';
+var RECORDS_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQeB6A8k_i3m0sEXUwIBgaGM26yG0Z-OyM9iLVg1SQkLlPHOwo53sC5VLA6OykK7atH2T8eLm09YXyO/pub?gid=1283006622&single=true&output=csv';
+var QUAL_STD_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQeB6A8k_i3m0sEXUwIBgaGM26yG0Z-OyM9iLVg1SQkLlPHOwo53sC5VLA6OykK7atH2T8eLm09YXyO/pub?gid=336061117&single=true&output=csv';
+var BEST_URL     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQeB6A8k_i3m0sEXUwIBgaGM26yG0Z-OyM9iLVg1SQkLlPHOwo53sC5VLA6OykK7atH2T8eLm09YXyO/pub?gid=1549979110&single=true&output=csv';
+
+var isMobile = window.innerWidth <= 768;
+window.addEventListener('resize', function() { isMobile = window.innerWidth <= 768; });
+
+function fetchCSV(url, cb) {
+  fetch(url)
+    .then(function(r) { return r.text(); })
+    .then(function(text) { cb(Papa.parse(text, {header:true, skipEmptyLines:true})); })
+    .catch(function() { Papa.parse(url, {download:true, header:true, skipEmptyLines:true, complete:cb}); });
+}
+
+function fillSelect(id, vals) {
+  var s = document.getElementById(id);
+  for (var i = 0; i < vals.length; i++) {
+    var o = document.createElement('option');
+    o.value = vals[i]; o.textContent = vals[i]; s.appendChild(o);
+  }
+}
+
+function renderPgNums(elId, cur, total, fn) {
+  var range = [];
+  if (total <= 7) { for (var i = 1; i <= total; i++) range.push(i); }
+  else {
+    range.push(1);
+    if (cur > 3) range.push('e');
+    for (var i = Math.max(2, cur-1); i <= Math.min(total-1, cur+1); i++) range.push(i);
+    if (cur < total-2) range.push('e');
+    range.push(total);
+  }
+  var html = '';
+  for (var i = 0; i < range.length; i++) {
+    var p = range[i];
+    if (p === 'e') { html += '<span class="pg-n" style="cursor:default">...</span>'; }
+    else { html += '<button class="pg-n' + (p === cur ? ' active' : '') + '" onclick="' + fn + '(' + p + ')">' + p + '</button>'; }
+  }
+  document.getElementById(elId).innerHTML = html;
+}
+
+function isEmpty(v) { return !v || v.trim() === '' || v.trim() === '-' || v.trim() === '--'; }
+
+function toggleFilters(prefix) {
+  var panel = document.getElementById(prefix + '-filters');
+  var btn = document.getElementById(prefix + '-filter-btn');
+  if (panel && btn) { panel.classList.toggle('open'); btn.classList.toggle('open'); }
+}
+
+function initFilterVisibility(prefix) {
+  var panel = document.getElementById(prefix + '-filters');
+  if (panel && !isMobile) panel.style.display = 'flex';
+}
+
+function updateFilterCount(prefix) {
+  var map = {
+    m: ['m-region','m-category','m-environment','m-comp','m-year','m-gender','m-medal','m-event','m-search'],
+    p: ['p-comp','p-year','p-gender','p-event','p-search'],
+    r: ['r-type','r-gender','r-event','r-search']
+  };
+  var count = 0;
+  var ids = map[prefix] || [];
+  for (var i = 0; i < ids.length; i++) {
+    var el = document.getElementById(ids[i]);
+    if (el && el.value && el.value !== '') count++;
+  }
+  var el = document.getElementById(prefix + '-fcount');
+  if (el) el.textContent = count;
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'participants' && !pLoaded) loadParticipants();
+  if (name === 'records' && !rLoaded) loadRecords();
+  if (name === 'qual' && !qLoaded) loadQual();
+}
+
+// ── PERFORMANCE PARSING ─────────────────────────────────────────
+function parsePerf(s) {
+  if (!s) return null;
+  s = s.toString().trim().replace(/[()]/g, '');
+  var parts = s.split(':');
+  if (parts.length === 3) return (+parts[0]) * 3600 + (+parts[1]) * 60 + (+parts[2]);
+  if (parts.length === 2) return (+parts[0]) * 60 + (+parts[1]);
+  var n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+function isFieldEvent(ev) {
+  return /jump|vault|throw|put|hammer|discus|javelin|shot|triple|long|high|pole/i.test(ev);
+}
+
+function isAgeSpecific(ev) {
+  return /hur|throw|put|hammer|discus|javelin|shot/i.test(ev);
+}
+
+function parseAthletes(cell) {
+  if (!cell || cell.trim() === '' || cell.trim() === '-') return [];
+  var results = [];
+  var re = /([^,()\n]+?)\s*\(([^)]+)\)/g;
+  var m;
+  while ((m = re.exec(cell)) !== null) {
+    var name = m[1].trim();
+    var perfRaw = m[2].trim();
+    if (name) results.push({name: name, perfRaw: perfRaw, perfVal: parsePerf(perfRaw)});
+  }
+  if (results.length === 0) {
+    var parts = cell.split(',');
+    for (var i = 0; i < parts.length; i++) {
+      var part = parts[i].trim();
+      var tokens = part.split(/\s+/);
+      if (tokens.length >= 2) {
+        var perfRaw = tokens[tokens.length - 1];
+        var name = tokens.slice(0, tokens.length - 1).join(' ');
+        results.push({name: name, perfRaw: perfRaw, perfVal: parsePerf(perfRaw)});
+      }
+    }
+  }
+  return results;
+}
+
+function meetsStandard(perfVal, stdVal, ev) {
+  if (perfVal === null || stdVal === null) return false;
+  return isFieldEvent(ev) ? perfVal >= stdVal : perfVal <= stdVal;
+}
+
+function eligibleCols(champ, ev) {
+  var all  = ['Under 16 (2011/2012 DOB)','Under 18 (2009/2010 DOB)','Under 20 (2007/2008 DOB)','Under 23 (2004/2005/2006 DOB)','Seniors'];
+  var u23s = ['Under 23 (2004/2005/2006 DOB)','Seniors'];
+  var u20  = ['Under 18 (2009/2010 DOB)','Under 20 (2007/2008 DOB)'];
+  var age  = isAgeSpecific(ev);
+  if (champ === 'Asian Games' || champ === 'Commonwealth' || champ === 'National Pool') {
+    return age ? u23s : all;
+  }
+  if (champ === 'Asian U23') return u23s;
+  if (champ === 'World U20' || champ === 'Asian U20') return u20;
+  return all;
+}
+
+var CHAMP_COL = {
+  'Asian Games':   'Asian Games',
+  'Commonwealth':  'Commonwealth',
+  'Asian U23':     'Asian U23',
+  'National Pool': 'National Pool',
+  'World U20':     'World U20',
+  'Asian U20':     'Asian U20'
+};
+
+// ── QUALIFICATIONS ───────────────────────────────────────────────
+var qStdData = [], qBestData = [], qLoaded = false, qChamp = 'Asian Games';
+
+function loadQual() {
+  var stdDone = false, bestDone = false;
+  fetchCSV(QUAL_STD_URL, function(r) {
+    qStdData = r.data; stdDone = true;
+    if (bestDone) qReady();
+  });
+  fetchCSV(BEST_URL, function(r) {
+    qBestData = r.data; bestDone = true;
+    if (stdDone) qReady();
+  });
+}
+
+function qReady() {
+  qLoaded = true;
+  document.getElementById('q-loading').style.display = 'none';
+  var qc = document.getElementById('q-content');
+  qc.style.display = 'flex';
+  var evSet = {};
+  for (var i = 0; i < qStdData.length; i++) {
+    var ev = qStdData[i]['Event'];
+    if (ev) evSet[ev] = 1;
+  }
+  var evList = Object.keys(evSet).sort();
+  fillSelect('q-event', evList);
+  renderQual();
+}
+
+function qSelectChamp(btn, champ) {
+  document.querySelectorAll('.champ-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  qChamp = champ;
+  renderQual();
+}
+
+function renderQual() {
+  if (!qLoaded) return;
+  var gFilter = document.getElementById('q-gender').value || '';
+  var eFilter = document.getElementById('q-event').value || '';
+  var stdCol  = CHAMP_COL[qChamp];
+  var rows = [];
+
+  for (var i = 0; i < qStdData.length; i++) {
+    var stdRow = qStdData[i];
+    var gender = stdRow['Gender'] || '';
+    var ev     = stdRow['Event']  || '';
+    if (gFilter && gender !== gFilter) continue;
+    if (eFilter && ev !== eFilter) continue;
+    var stdRaw = stdRow[stdCol] || '';
+    if (!stdRaw || stdRaw.trim() === '' || stdRaw.trim() === '-') continue;
+    var stdVal = parsePerf(stdRaw);
+
+    var bestRow = null;
+    for (var j = 0; j < qBestData.length; j++) {
+      if (qBestData[j]['Gender'] === gender && qBestData[j]['Event'] === ev) {
+        bestRow = qBestData[j]; break;
+      }
+    }
+
+    var qualified = [];
+    if (bestRow) {
+      var cols = eligibleCols(qChamp, ev);
+      for (var c = 0; c < cols.length; c++) {
+        var cell = bestRow[cols[c]] || '';
+        var athletes = parseAthletes(cell);
+        for (var a = 0; a < athletes.length; a++) {
+          var ath = athletes[a];
+          if (meetsStandard(ath.perfVal, stdVal, ev)) {
+            var dup = false;
+            for (var d = 0; d < qualified.length; d++) {
+              if (qualified[d].name === ath.name) { dup = true; break; }
+            }
+            if (!dup) qualified.push(ath);
+          }
+        }
+      }
+    }
+    rows.push({gender: gender, ev: ev, stdRaw: stdRaw, qualified: qualified});
+  }
+
+  var eventsWithQual = 0;
+  var athNames = {};
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].qualified.length > 0) eventsWithQual++;
+    for (var j = 0; j < rows[i].qualified.length; j++) athNames[rows[i].qualified[j].name] = 1;
+  }
+  document.getElementById('q-s-events').textContent  = eventsWithQual;
+  document.getElementById('q-s-athletes').textContent = Object.keys(athNames).length;
+
+  var html = '';
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    var chips = '';
+    if (r.qualified.length > 0) {
+      for (var j = 0; j < r.qualified.length; j++) {
+        var a = r.qualified[j];
+        chips += '<span class="athlete-chip"><span class="chip-name">' + a.name + '</span><span class="chip-perf">' + a.perfRaw + '</span></span>';
+      }
+    } else {
+      chips = '<span class="no-qual">No qualifiers yet</span>';
+    }
+    html += '<tr>'
+      + '<td><span class="gender-' + r.gender + '">' + r.gender + '</span></td>'
+      + '<td>' + r.ev + '</td>'
+      + '<td class="std">' + r.stdRaw + '</td>'
+      + '<td>' + chips + '</td>'
+      + '</tr>';
+  }
+  document.getElementById('q-tbody').innerHTML = html;
+}
+
+// ── MEDALS ───────────────────────────────────────────────────────
+var mData=[], mFiltered=[], mSortCol='Year', mSortAsc=false, mPage=1;
+fetchCSV(MEDALS_URL, function(r) { mData=r.data; mPopulate(); initFilterVisibility('m'); renderMedals(); });
+
+function mPopulate() {
+  function uniq(k) {
+    var s={}, arr=[];
+    for(var i=0;i<mData.length;i++){var v=mData[i][k];if(v&&!s[v]){s[v]=1;arr.push(v);}}
+    return arr.sort();
+  }
+  fillSelect('m-region',uniq('Region')); fillSelect('m-category',uniq('Category'));
+  fillSelect('m-environment',uniq('Environment')); fillSelect('m-comp',uniq('Competition'));
+  var yrs={},yarr=[];
+  for(var i=0;i<mData.length;i++){var y=mData[i].Year;if(y&&!yrs[y]){yrs[y]=1;yarr.push(y);}}
+  yarr.sort(function(a,b){return b-a;});
+  fillSelect('m-year',yarr);
+  fillSelect('m-gender',uniq('Gender')); fillSelect('m-event',uniq('Event'));
+  var ids=['m-region','m-category','m-environment','m-comp','m-year','m-gender','m-medal','m-event'];
+  for(var i=0;i<ids.length;i++){
+    document.getElementById(ids[i]).addEventListener('change', function(){mResetPage();renderMedals();updateFilterCount('m');});
+  }
+}
+function mVal(id){return document.getElementById(id)?document.getElementById(id).value:'';}
+function mGetFiltered() {
+  var q=mVal('m-search').toLowerCase();
+  return mData.filter(function(d){
+    return (!mVal('m-region')||d.Region===mVal('m-region'))
+      &&(!mVal('m-category')||d.Category===mVal('m-category'))
+      &&(!mVal('m-environment')||d.Environment===mVal('m-environment'))
+      &&(!mVal('m-comp')||d.Competition===mVal('m-comp'))
+      &&(!mVal('m-year')||d.Year==mVal('m-year'))
+      &&(!mVal('m-gender')||d.Gender===mVal('m-gender'))
+      &&(!mVal('m-medal')||d.Medal===mVal('m-medal'))
+      &&(!mVal('m-event')||d.Event===mVal('m-event'))
+      &&(!q||(d.Name||'').toLowerCase().indexOf(q)>=0);
+  });
+}
+function mSort(c){mSortCol===c?mSortAsc=!mSortAsc:(mSortCol=c,mSortAsc=true);mResetPage();renderMedals();}
+function mResetPage(){mPage=1;}
+function mChangePage(d){var t=Math.ceil(mFiltered.length/PER);mPage=Math.max(1,Math.min(t,mPage+d));renderMedals();}
+function mGoPage(p){mPage=p;renderMedals();}
+function renderMedals(){
+  mFiltered=mGetFiltered();
+  mFiltered.sort(function(a,b){var va=a[mSortCol]||'',vb=b[mSortCol]||'';if(!isNaN(va)&&!isNaN(vb)){va=+va;vb=+vb;}return mSortAsc?(va>vb?1:-1):(va<vb?1:-1);});
+  document.getElementById('m-total').textContent=mFiltered.length;
+  document.getElementById('m-gold').textContent=mFiltered.filter(function(d){return d.Medal==='Gold';}).length;
+  document.getElementById('m-silver').textContent=mFiltered.filter(function(d){return d.Medal==='Silver';}).length;
+  document.getElementById('m-bronze').textContent=mFiltered.filter(function(d){return d.Medal==='Bronze';}).length;
+  var tp=Math.max(1,Math.ceil(mFiltered.length/PER));mPage=Math.min(mPage,tp);
+  var s=(mPage-1)*PER, pg=mFiltered.slice(s,s+PER), html='';
+  for(var i=0;i<pg.length;i++){
+    var d=pg[i];
+    html+='<tr><td>'+(d.Year||'')+'</td><td>'+(d.Competition||'')+'</td><td class="venue">'+(d.Venue||'')+'</td><td class="athlete">'+(d.Name||'')+'</td><td>'+(d.Event||'')+'</td><td><span class="gender-'+d.Gender+'">'+(d.Gender||'')+'</span></td><td><span class="medal-badge medal-'+d.Medal+'"><span class="medal-dot dot-'+d.Medal+'"></span>'+(d.Medal||'')+'</span></td><td class="perf">'+(d.Performance||'')+'</td></tr>';
+  }
+  document.getElementById('m-tbody').innerHTML=html;
+  document.getElementById('m-info').textContent=(s+1)+'--'+Math.min(s+PER,mFiltered.length)+' of '+mFiltered.length+' records';
+  document.getElementById('m-prev').disabled=mPage===1;
+  document.getElementById('m-next').disabled=mPage===tp;
+  renderPgNums('m-nums',mPage,tp,'mGoPage');
+}
+
+// ── PARTICIPANTS ─────────────────────────────────────────────────
+var pData=[],pFiltered=[],pCols=[],pVisibleCols=[],pRoundCols=[],pFinalCol=null,pSortCol='Year',pSortAsc=false,pPage=1,pLoaded=false;
+function loadParticipants(){
+  fetchCSV(PART_URL, function(r){
+    pData=r.data; pLoaded=true;
+    document.getElementById('p-loading').style.display='none';
+    document.getElementById('p-table-wrap').style.display='flex';
+    if(!pData.length)return;
+    pCols=Object.keys(pData[0]);
+    pRoundCols=pCols.filter(function(c){return /heat|qual|quarter|semi|final/i.test(c);});
+    pFinalCol=null;
+    for(var i=0;i<pCols.length;i++){if(/^final$/i.test(pCols[i].trim())){pFinalCol=pCols[i];break;}}
+    if(!pFinalCol){for(var i=pCols.length-1;i>=0;i--){if(/final/i.test(pCols[i])&&!/semi|quarter/i.test(pCols[i])){pFinalCol=pCols[i];break;}}}
+    pBuildTable(); pPopulate(); initFilterVisibility('p'); renderParticipants();
+  });
+}
+function pBuildTable(){
+  var yearKey=null,compKey=null,cityKey=null,athKey=null,evKey=null,genKey=null,heatKey=null,qfKey=null,sfKey=null;
+  for(var i=0;i<pCols.length;i++){
+    var c=pCols[i];
+    if(!yearKey&&/year/i.test(c))yearKey=c;
+    if(!compKey&&/^comp$/i.test(c.trim()))compKey=c;
+    if(!compKey&&/comp/i.test(c)&&!/competition/i.test(c))compKey=c;
+    if(!cityKey&&/city|venue/i.test(c))cityKey=c;
+    if(!athKey&&/athlete|name/i.test(c))athKey=c;
+    if(!evKey&&/event/i.test(c))evKey=c;
+    if(!genKey&&/gender/i.test(c))genKey=c;
+    if(!heatKey&&/heat|qual/i.test(c))heatKey=c;
+    if(!qfKey&&/quarter/i.test(c))qfKey=c;
+    if(!sfKey&&/semi/i.test(c))sfKey=c;
+  }
+  var ordered=[yearKey,compKey,cityKey,athKey,evKey,genKey,heatKey,qfKey,sfKey,pFinalCol];
+  var seen={};
+  pVisibleCols=[];
+  for(var i=0;i<ordered.length;i++){if(ordered[i]&&!seen[ordered[i]]){seen[ordered[i]]=1;pVisibleCols.push(ordered[i]);}}
+  var tbl=document.getElementById('p-table');
+  var cg=document.createElement('colgroup');
+  for(var i=0;i<pVisibleCols.length;i++){
+    var c=pVisibleCols[i], col=document.createElement('col');
+    if(/year/i.test(c))col.style.width='50px';
+    else if(/^comp$/i.test(c.trim()))col.style.width='52px';
+    else if(/city|venue/i.test(c))col.style.width='95px';
+    else if(/athlete|name/i.test(c))col.style.width='155px';
+    else if(/event/i.test(c))col.style.width='125px';
+    else if(/gender/i.test(c))col.style.width='58px';
+    else if(/heat|qual/i.test(c))col.style.width='135px';
+    else if(/quarter/i.test(c))col.style.width='105px';
+    else if(/semi/i.test(c))col.style.width='90px';
+    else if(/final/i.test(c))col.style.width='105px';
+    else col.style.width='95px';
+    cg.appendChild(col);
+  }
+  tbl.insertBefore(cg,tbl.firstChild);
+  var hhtml='';
+  for(var i=0;i<pVisibleCols.length;i++){hhtml+='<th onclick="pSort(\''+pVisibleCols[i]+'\')">'+pVisibleCols[i]+'<span class="sa">&#8597;</span></th>';}
+  document.getElementById('p-thead-row').innerHTML=hhtml;
+}
+function pPopulate(){
+  var compKey=null,yearKey=null,genKey=null,evKey=null;
+  for(var i=0;i<pCols.length;i++){
+    var c=pCols[i];
+    if(!compKey&&/^competition$/i.test(c.trim()))compKey=c;
+    if(!compKey&&/competition/i.test(c))compKey=c;
+    if(!yearKey&&/year/i.test(c))yearKey=c;
+    if(!genKey&&/gender/i.test(c))genKey=c;
+    if(!evKey&&/event/i.test(c))evKey=c;
+  }
+  function uniq(k){var s={},arr=[];for(var i=0;i<pData.length;i++){var v=pData[i][k];if(v&&!s[v]){s[v]=1;arr.push(v);}}return arr.sort();}
+  if(compKey)fillSelect('p-comp',uniq(compKey));
+  if(yearKey){var s={},arr=[];for(var i=0;i<pData.length;i++){var v=pData[i][yearKey];if(v&&!s[v]){s[v]=1;arr.push(v);}}arr.sort(function(a,b){return b-a;});fillSelect('p-year',arr);}
+  if(genKey)fillSelect('p-gender',uniq(genKey));
+  if(evKey)fillSelect('p-event',uniq(evKey));
+  var ids=['p-comp','p-year','p-gender','p-event'];
+  for(var i=0;i<ids.length;i++){document.getElementById(ids[i]).addEventListener('change',function(){pResetPage();renderParticipants();updateFilterCount('p');});}
+}
+function pGetFiltered(){
+  var compKey=null,yearKey=null,genKey=null,evKey=null,athKey=null;
+  for(var i=0;i<pCols.length;i++){
+    var c=pCols[i];
+    if(!compKey&&/^competition$/i.test(c.trim()))compKey=c;
+    if(!compKey&&/competition/i.test(c))compKey=c;
+    if(!yearKey&&/year/i.test(c))yearKey=c;
+    if(!genKey&&/gender/i.test(c))genKey=c;
+    if(!evKey&&/event/i.test(c))evKey=c;
+    if(!athKey&&/athlete|name/i.test(c))athKey=c;
+  }
+  var vc=document.getElementById('p-comp').value, vy=document.getElementById('p-year').value;
+  var vg=document.getElementById('p-gender').value, ve=document.getElementById('p-event').value;
+  var q=document.getElementById('p-search').value.toLowerCase();
+  return pData.filter(function(d){
+    return (!vc||!compKey||d[compKey]===vc)&&(!vy||!yearKey||d[yearKey]==vy)
+      &&(!vg||!genKey||d[genKey]===vg)&&(!ve||!evKey||d[evKey]===ve)
+      &&(!q||!athKey||(d[athKey]||'').toLowerCase().indexOf(q)>=0);
+  });
+}
+function getRoundClass(col,val,row){
+  var qfCol=null,sfCol=null;
+  for(var i=0;i<pCols.length;i++){if(!qfCol&&/quarter/i.test(pCols[i]))qfCol=pCols[i];if(!sfCol&&/semi/i.test(pCols[i]))sfCol=pCols[i];}
+  function hasVal(c){return c&&row[c]&&row[c].trim()!==''&&row[c].trim()!=='-';}
+  if(/heat|qual/i.test(col)){if(!isEmpty(val)&&(hasVal(qfCol)||hasVal(sfCol)||hasVal(pFinalCol)))return 'round progressed';return 'round'+(isEmpty(val)?' empty':'');}
+  if(/quarter/i.test(col)){if(!isEmpty(val)&&(hasVal(sfCol)||hasVal(pFinalCol)))return 'round progressed';return 'round'+(isEmpty(val)?' empty':'');}
+  if(/semi/i.test(col)){if(!isEmpty(val)&&hasVal(pFinalCol))return 'round progressed';return 'round'+(isEmpty(val)?' empty':'');}
+  if(pFinalCol&&col===pFinalCol){if(isEmpty(val))return 'round empty';if(/\(1st\)/i.test(val))return 'round medal1';if(/\(2nd\)/i.test(val))return 'round medal2';if(/\(3rd\)/i.test(val))return 'round medal3';return 'round';}
+  return 'round'+(isEmpty(val)?' empty':'');
+}
+function pSort(c){pSortCol===c?pSortAsc=!pSortAsc:(pSortCol=c,pSortAsc=true);pResetPage();renderParticipants();}
+function pResetPage(){pPage=1;}
+function pChangePage(d){var t=Math.ceil(pFiltered.length/PER);pPage=Math.max(1,Math.min(t,pPage+d));renderParticipants();}
+function pGoPage(p){pPage=p;renderParticipants();}
+function renderParticipants(){
+  pFiltered=pGetFiltered();
+  pFiltered.sort(function(a,b){var va=a[pSortCol]||'',vb=b[pSortCol]||'';if(!isNaN(va)&&!isNaN(vb)){va=+va;vb=+vb;}return pSortAsc?(va>vb?1:-1):(va<vb?1:-1);});
+  var tp=Math.max(1,Math.ceil(pFiltered.length/PER));pPage=Math.min(pPage,tp);
+  var s=(pPage-1)*PER,pg=pFiltered.slice(s,s+PER);
+  var genKey=null,athKey=null;
+  for(var i=0;i<pCols.length;i++){if(!genKey&&/gender/i.test(pCols[i]))genKey=pCols[i];if(!athKey&&/athlete|name/i.test(pCols[i]))athKey=pCols[i];}
+  var html='';
+  for(var i=0;i<pg.length;i++){
+    var row=pg[i]; html+='<tr>';
+    for(var j=0;j<pVisibleCols.length;j++){
+      var c=pVisibleCols[j],val=row[c]||'';
+      if(c===athKey)html+='<td class="athlete">'+val+'</td>';
+      else if(c===genKey)html+='<td><span class="gender-'+val+'">'+val+'</span></td>';
+      else if(pRoundCols.indexOf(c)>=0){var cls=getRoundClass(c,val,row);html+='<td class="'+cls+'">'+(isEmpty(val)?'--':val)+'</td>';}
+      else html+='<td>'+val+'</td>';
+    }
+    html+='</tr>';
+  }
+  document.getElementById('p-tbody').innerHTML=html;
+  document.getElementById('p-info').textContent=(s+1)+'--'+Math.min(s+PER,pFiltered.length)+' of '+pFiltered.length+' records';
+  document.getElementById('p-prev').disabled=pPage===1; document.getElementById('p-next').disabled=pPage===tp;
+  renderPgNums('p-nums',pPage,tp,'pGoPage');
+}
+
+// ── NATIONAL RECORDS ─────────────────────────────────────────────
+var rData=[],rFiltered=[],rSortCol='Event',rSortAsc=true,rPage=1,rLoaded=false;
+function loadRecords(){
+  fetchCSV(RECORDS_URL, function(r){
+    rData=r.data; rLoaded=true;
+    document.getElementById('r-loading').style.display='none';
+    document.getElementById('r-table-wrap').style.display='flex';
+    rPopulate(); initFilterVisibility('r'); renderRecords();
+  });
+}
+function rPopulate(){
+  function uniq(k){var s={},arr=[];for(var i=0;i<rData.length;i++){var v=rData[i][k];if(v&&!s[v]){s[v]=1;arr.push(v);}}return arr.sort();}
+  fillSelect('r-type',uniq('Record Type')); fillSelect('r-gender',uniq('Gender')); fillSelect('r-event',uniq('Event'));
+  var typeEl=document.getElementById('r-type'), genEl=document.getElementById('r-gender');
+  for(var i=0;i<typeEl.options.length;i++){if(typeEl.options[i].value==='National Record'){typeEl.options[i].selected=true;break;}}
+  for(var i=0;i<genEl.options.length;i++){if(genEl.options[i].value==='Men'){genEl.options[i].selected=true;break;}}
+  var ids=['r-type','r-gender','r-event'];
+  for(var i=0;i<ids.length;i++){document.getElementById(ids[i]).addEventListener('change',function(){rResetPage();renderRecords();updateFilterCount('r');});}
+}
+function rGetFiltered(){
+  var vt=document.getElementById('r-type').value, vg=document.getElementById('r-gender').value;
+  var ve=document.getElementById('r-event').value, q=document.getElementById('r-search').value.toLowerCase();
+  return rData.filter(function(d){
+    return (!vt||d['Record Type']===vt)&&(!vg||d['Gender']===vg)&&(!ve||d['Event']===ve)&&(!q||(d['Athlete']||'').toLowerCase().indexOf(q)>=0);
+  });
+}
+function rSort(c){rSortCol===c?rSortAsc=!rSortAsc:(rSortCol=c,rSortAsc=true);rResetPage();renderRecords();}
+function rResetPage(){rPage=1;}
+function rChangePage(d){var t=Math.ceil(rFiltered.length/PER);rPage=Math.max(1,Math.min(t,rPage+d));renderRecords();}
+function rGoPage(p){rPage=p;renderRecords();}
+function renderRecords(){
+  rFiltered=rGetFiltered();
+  rFiltered.sort(function(a,b){var oa=+(a['Order']||9999),ob=+(b['Order']||9999);if(oa!==ob)return oa-ob;var va=a[rSortCol]||'',vb=b[rSortCol]||'';if(!isNaN(va)&&!isNaN(vb)){va=+va;vb=+vb;}return rSortAsc?(va>vb?1:-1):(va<vb?1:-1);});
+  var tp=Math.max(1,Math.ceil(rFiltered.length/PER));rPage=Math.min(rPage,tp);
+  var s=(rPage-1)*PER,pg=rFiltered.slice(s,s+PER),html='';
+  for(var i=0;i<pg.length;i++){
+    var d=pg[i];
+    html+='<tr><td>'+(d['Record Type']||'')+'</td><td>'+(d['Event']||'')+'</td><td><span class="gender-'+d['Gender']+'">'+(d['Gender']||'')+'</span></td><td class="perf">'+(d['Performance']||'')+'</td><td class="athlete">'+(d['Athlete']||'')+'</td><td class="venue">'+(d['Venue']||'')+'</td><td>'+(d['Date']||'')+'</td></tr>';
+  }
+  document.getElementById('r-tbody').innerHTML=html;
+  document.getElementById('r-info').textContent=(s+1)+'--'+Math.min(s+PER,rFiltered.length)+' of '+rFiltered.length+' records';
+  document.getElementById('r-prev').disabled=rPage===1; document.getElementById('r-next').disabled=rPage===tp;
+  renderPgNums('r-nums',rPage,tp,'rGoPage');
+}
+</script>
+</body>
+</html>
