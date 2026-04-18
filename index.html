@@ -92,6 +92,7 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
 .chip-name{color:#e2e8f0;font-weight:500}
 .chip-perf{color:var(--blue3);font-family:'Courier New',monospace;font-size:10px}
 .no-qual{color:var(--muted);font-size:11px;font-style:italic}
+.qual-table td:last-child{white-space:normal;word-wrap:break-word;line-height:2}
 .qual-summary{display:flex;gap:12px;flex-shrink:0;flex-wrap:wrap}
 .qs-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.55rem 1rem;display:flex;align-items:center;gap:10px}
 .qs-num{font-size:18px;font-weight:700;color:var(--blue3)}
@@ -535,13 +536,14 @@ function meetsStandard(perfVal, stdVal, ev) {
 
 function eligibleCols(champ, ev) {
   var all  = ['Under 16 (2011/2012 DOB)','Under 18 (2009/2010 DOB)','Under 20 (2007/2008 DOB)','Under 23 (2004/2005/2006 DOB)','Seniors'];
+  var u23only = ['Under 23 (2004/2005/2006 DOB)'];
   var u23s = ['Under 23 (2004/2005/2006 DOB)','Seniors'];
   var u20  = ['Under 18 (2009/2010 DOB)','Under 20 (2007/2008 DOB)'];
   var age  = isAgeSpecific(ev);
   if (champ === 'Asian Games' || champ === 'Commonwealth' || champ === 'National Pool') {
     return age ? u23s : all;
   }
-  if (champ === 'Asian U23') return u23s;
+  if (champ === 'Asian U23') return age ? u23only : u23only;
   if (champ === 'World U20' || champ === 'Asian U20') return u20;
   return all;
 }
@@ -637,6 +639,12 @@ function renderQual() {
           }
         }
       }
+      // sort best to worst: field = descending, track = ascending
+      qualified.sort(function(a, b) {
+        if (a.perfVal === null) return 1;
+        if (b.perfVal === null) return -1;
+        return isFieldEvent(ev) ? b.perfVal - a.perfVal : a.perfVal - b.perfVal;
+      });
     }
     rows.push({gender: gender, ev: ev, stdRaw: stdRaw, qualified: qualified});
   }
