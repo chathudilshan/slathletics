@@ -331,20 +331,21 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
 <div id="tab-qual" class="tab-content">
   <div class="inner">
           <div class="page-headline">2026 Qualification Standards Tracker</div>
-    <div class="qual-champ-selector">
-      <button class="champ-btn active" onclick="qSelectChamp(this,'Asian Games')">Asian Games</button>
-      <button class="champ-btn" onclick="qSelectChamp(this,'Commonwealth')">Commonwealth Games</button>
-      <button class="champ-btn" onclick="qSelectChamp(this,'Asian U23')">Asian U23 Championship</button>
-      <button class="champ-btn" onclick="qSelectChamp(this,'World U20')">World U20 Championship</button>
-      <button class="champ-btn" onclick="qSelectChamp(this,'Asian U20')">Asian U20 Championships</button>
-      <button class="champ-btn" onclick="qSelectChamp(this,'National Pool')">National Pool</button>
-    </div>
-    <div class="filters" id="q-filters" style="display:flex">
-      <div class="filter-row f4">
-        <div class="filter-group"><div class="filter-label">Gender</div><select id="q-gender" onchange="renderQual()"><option value="">All</option><option>Men</option><option>Women</option></select></div>
-        <div class="filter-group"><div class="filter-label">Event</div><select id="q-event" onchange="renderQual()"><option value="">All</option></select></div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0">
+      <div class="qual-champ-selector" style="flex:1">
+        <button class="champ-btn active" onclick="qSelectChamp(this,'Asian Games')">Asian Games</button>
+        <button class="champ-btn" onclick="qSelectChamp(this,'Commonwealth')">Commonwealth Games</button>
+        <button class="champ-btn" onclick="qSelectChamp(this,'Asian U23')">Asian U23 Championship</button>
+        <button class="champ-btn" onclick="qSelectChamp(this,'World U20')">World U20 Championship</button>
+        <button class="champ-btn" onclick="qSelectChamp(this,'Asian U20')">Asian U20 Championships</button>
+        <button class="champ-btn" onclick="qSelectChamp(this,'National Pool')">National Pool</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-shrink:0">
+        <div class="filter-group" style="min-width:110px"><div class="filter-label">Gender</div><select id="q-gender" onchange="renderQual()"><option value="">All</option><option>Men</option><option>Women</option></select></div>
+        <div class="filter-group" style="min-width:140px"><div class="filter-label">Event</div><select id="q-event" onchange="renderQual()"><option value="">All</option></select></div>
       </div>
     </div>
+    <div class="filters" id="q-filters" style="display:none"></div>
     <div id="q-loading" class="loading">
       <span class="loading-dot">&#9679;</span><span class="loading-dot" style="animation-delay:.2s">&#9679;</span><span class="loading-dot" style="animation-delay:.4s">&#9679;</span>
       <p style="margin-top:.8rem;font-size:12px;letter-spacing:1px">LOADING DATA</p>
@@ -629,18 +630,16 @@ function renderQual() {
         var athletes = parseAthletes(cell);
         for (var a = 0; a < athletes.length; a++) {
           var ath = athletes[a];
-          var met = meetsStandard(ath.perfVal, stdVal, ev);
-          var dup = false;
-          for (var d = 0; d < qualified.length; d++) {
-            if (qualified[d].name === ath.name) { dup = true; break; }
+          if (meetsStandard(ath.perfVal, stdVal, ev)) {
+            var dup = false;
+            for (var d = 0; d < qualified.length; d++) {
+              if (qualified[d].name === ath.name) { dup = true; break; }
+            }
+            if (!dup) qualified.push(ath);
           }
-          if (!dup) qualified.push({name: ath.name, perfRaw: ath.perfRaw, perfVal: ath.perfVal, met: met});
         }
       }
-      // sort: qualified first (best to worst), then non-qualifiers (best to worst)
       qualified.sort(function(a, b) {
-        if (a.met && !b.met) return -1;
-        if (!a.met && b.met) return 1;
         if (a.perfVal === null) return 1;
         if (b.perfVal === null) return -1;
         return isFieldEvent(ev) ? b.perfVal - a.perfVal : a.perfVal - b.perfVal;
@@ -652,11 +651,8 @@ function renderQual() {
   var eventsWithQual = 0;
   var athNames = {};
   for (var i = 0; i < rows.length; i++) {
-    var hasQual = false;
-    for (var j = 0; j < rows[i].qualified.length; j++) {
-      if (rows[i].qualified[j].met) { hasQual = true; athNames[rows[i].qualified[j].name] = 1; }
-    }
-    if (hasQual) eventsWithQual++;
+    if (rows[i].qualified.length > 0) eventsWithQual++;
+    for (var j = 0; j < rows[i].qualified.length; j++) athNames[rows[i].qualified[j].name] = 1;
   }
   document.getElementById('q-s-events').textContent  = eventsWithQual;
   document.getElementById('q-s-athletes').textContent = Object.keys(athNames).length;
@@ -668,11 +664,7 @@ function renderQual() {
     if (r.qualified.length > 0) {
       for (var j = 0; j < r.qualified.length; j++) {
         var a = r.qualified[j];
-        if (a.met) {
-          chips += '<span class="athlete-chip"><span class="chip-name">' + a.name + '</span><span class="chip-perf">' + a.perfRaw + '</span></span>';
-        } else {
-          chips += '<span class="athlete-chip athlete-chip-miss"><span class="chip-name chip-name-miss">' + a.name + '</span><span class="chip-perf chip-perf-miss">' + a.perfRaw + '</span></span>';
-        }
+        chips += '<span class="athlete-chip"><span class="chip-name">' + a.name + '</span><span class="chip-perf">' + a.perfRaw + '</span></span>';
       }
     } else {
       chips = '<span class="no-qual">No qualifiers yet</span>';
