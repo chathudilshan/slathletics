@@ -155,8 +155,8 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
 .bar-track{flex:1;background:#0a1020;border-radius:4px;height:7px;overflow:hidden}
 .bar-fill{height:100%;border-radius:4px}
 .bar-val{font-size:11px;color:var(--muted);min-width:18px;text-align:right}
-.prog-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);background:#0a1020;flex-shrink:0;margin-top:2px}
-.prog-dot.current{border-color:var(--blue3);background:var(--blue3)}
+#r-tbody tr:hover td:last-child{color:var(--blue3);}
+#r-tbody tr:hover{background:#111a2a;border-left:2px solid var(--blue3)}
 @media(max-width:768px){
   html,body{overflow:auto;height:auto}
   main{overflow:auto;flex:none}
@@ -360,7 +360,7 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
     <div id="r-loading" class="loading"><span class="loading-dot">&#9679;</span><span class="loading-dot" style="animation-delay:.2s">&#9679;</span><span class="loading-dot" style="animation-delay:.4s">&#9679;</span><p style="margin-top:.8rem;font-size:12px">LOADING DATA</p></div>
     <div class="table-wrap" id="r-table-wrap" style="display:none">
       <div class="table-scroll">
-        <table><colgroup><col style="width:140px"><col style="width:130px"><col style="width:62px"><col style="width:100px"><col style="width:185px"><col style="width:120px"><col style="width:90px"></colgroup>
+        <table><colgroup><col style="width:140px"><col style="width:130px"><col style="width:62px"><col style="width:100px"><col style="width:185px"><col style="width:120px"><col style="width:90px"><col style="width:28px"></colgroup>
           <thead><tr>
             <th onclick="rSort('Record Type')">Record Type<span class="sa">&#8597;</span></th>
             <th onclick="rSort('Event')">Event<span class="sa">&#8597;</span></th>
@@ -369,6 +369,7 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
             <th onclick="rSort('Athlete')">Athlete<span class="sa">&#8597;</span></th>
             <th onclick="rSort('Venue')">Venue<span class="sa">&#8597;</span></th>
             <th onclick="rSort('Date')">Date<span class="sa">&#8597;</span></th>
+            <th></th>
           </tr></thead>
           <tbody id="r-tbody"></tbody>
         </table>
@@ -784,7 +785,8 @@ function renderRecords() {
       +'<td class="perf">'+(d['Performance']||'')+'</td>'
       +'<td class="athlete">'+(d['Athlete']||'')+'</td>'
       +'<td class="venue">'+(d['Venue']||'')+'</td>'
-      +'<td>'+(d['Date']||'')+'</td>'
+      +'<td style="color:var(--muted);font-size:11px">'+(d['Date']||'')+'</td>'
+      +'<td style="text-align:center;color:var(--border);font-size:14px;width:28px">&#8250;</td>'
       +'</tr>';
   }
   document.getElementById('r-tbody').innerHTML=html;
