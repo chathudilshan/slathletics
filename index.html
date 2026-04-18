@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SLATHLETICS | STATS-ZONE</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
@@ -36,9 +37,7 @@ main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
 .sn-t{color:var(--blue3)}.sn-g{color:var(--gold)}.sn-s{color:var(--silver)}.sn-b{color:var(--bronze)}
 .filters{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.7rem .9rem;flex-shrink:0;display:flex;flex-direction:column;gap:7px}
 .filter-row{display:grid;gap:8px}
-.f8{grid-template-columns:repeat(8,1fr)}
-.f4{grid-template-columns:repeat(4,1fr)}
-.f1{grid-template-columns:1fr}
+.f8{grid-template-columns:repeat(8,1fr)}.f4{grid-template-columns:repeat(4,1fr)}.f1{grid-template-columns:1fr}
 .filter-group{display:flex;flex-direction:column;gap:3px}
 .filter-label{font-size:9px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase}
 select,input{width:100%;background:#0a1020;border:1px solid var(--border);color:#e2e8f0;padding:5px 8px;border-radius:6px;font-size:12px;outline:none;appearance:none;-webkit-appearance:none;transition:border .15s}
@@ -70,19 +69,14 @@ td.round.progressed{background:#0d2918;color:#7ecf9a;border-left:2px solid #2d7a
 td.round.medal1{background:#3a2800;color:var(--gold);border-left:2px solid var(--gold)}
 td.round.medal2{background:#1e2024;color:var(--silver);border-left:2px solid var(--silver)}
 td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var(--bronze)}
-.qual-champ-selector{display:flex;flex-wrap:wrap;gap:8px;flex-shrink:0}
+.qual-champ-selector{display:flex;flex-wrap:wrap;gap:8px}
 .champ-btn{background:#0a1020;border:1px solid var(--border);color:var(--muted);padding:7px 18px;border-radius:20px;font-size:12px;cursor:pointer;transition:all .2s;font-weight:500}
 .champ-btn:hover{color:#e2e8f0;border-color:var(--blue2)}
 .champ-btn.active{background:var(--blue2);border-color:var(--blue2);color:#fff}
-.qual-filters{display:flex;gap:10px;flex-shrink:0;align-items:flex-end}
-.qual-filters .filter-group{min-width:140px}
 .qual-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;flex:1;display:flex;flex-direction:column;min-height:0}
 .qual-table-scroll{overflow-y:auto;flex:1;min-height:0}
 .qual-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
-.qual-table colgroup col:nth-child(1){width:70px}
-.qual-table colgroup col:nth-child(2){width:140px}
-.qual-table colgroup col:nth-child(3){width:100px}
-.qual-table colgroup col:nth-child(4){width:auto}
+.qual-table colgroup col:nth-child(1){width:70px}.qual-table colgroup col:nth-child(2){width:140px}.qual-table colgroup col:nth-child(3){width:100px}.qual-table colgroup col:nth-child(4){width:auto}
 .qual-table thead th{background:#080d18;color:var(--blue3);padding:8px 12px;text-align:left;font-weight:500;font-size:10px;letter-spacing:.7px;text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--border)}
 .qual-table tbody tr{border-bottom:1px solid #0e1622;transition:background .12s}
 .qual-table tbody tr:hover{background:#111a2a}
@@ -91,9 +85,6 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
 .athlete-chip{display:inline-flex;align-items:center;gap:5px;background:#0e1e35;border:1px solid var(--border);border-radius:6px;padding:3px 9px;margin:2px 3px 2px 0;font-size:11px;white-space:nowrap}
 .chip-name{color:#e2e8f0;font-weight:500}
 .chip-perf{color:var(--blue3);font-family:'Courier New',monospace;font-size:10px}
-.athlete-chip-miss{background:#111518;border-color:#1e2530}
-.chip-name-miss{color:#455060;font-weight:400}
-.chip-perf-miss{color:#374050}
 .no-qual{color:var(--muted);font-size:11px;font-style:italic}
 .qual-table td:last-child{white-space:normal;word-wrap:break-word;line-height:2}
 .qual-summary{display:flex;gap:12px;flex-shrink:0;flex-wrap:wrap}
@@ -113,6 +104,53 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
 .loading{text-align:center;padding:3rem;color:var(--muted);flex-shrink:0}
 .loading-dot{display:inline-block;animation:pulse 1.4s ease-in-out infinite;font-size:16px;margin:0 3px}
 @keyframes pulse{0%,100%{opacity:.2}50%{opacity:1}}
+
+/* ── MEDAL SUMMARY ── */
+.summary-layout{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;min-height:0;overflow:hidden}
+.summary-panel{background:var(--card);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.summary-panel-head{padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--blue3);letter-spacing:.8px;text-transform:uppercase;flex-shrink:0}
+.summary-list{overflow-y:auto;flex:1;min-height:0}
+.summary-row{display:grid;align-items:center;padding:8px 14px;border-bottom:1px solid #0a1420;cursor:pointer;transition:background .12s;gap:8px}
+.summary-row:hover{background:#111a2a}
+.summary-row.active{background:#0e2040;border-left:2px solid var(--blue3)}
+.ath-row{grid-template-columns:28px 1fr auto auto auto auto}
+.comp-row{grid-template-columns:1fr auto auto auto auto}
+.rank-num{font-size:11px;color:var(--muted);text-align:center;font-weight:600}
+.ath-name{font-size:12px;font-weight:500;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.comp-name{font-size:12px;font-weight:500;color:#fff}
+.medal-count{font-size:12px;font-weight:700;min-width:22px;text-align:center}
+.mc-g{color:var(--gold)}.mc-s{color:var(--silver)}.mc-b{color:var(--bronze)}.mc-t{color:var(--blue3)}
+.medal-pips{display:flex;gap:3px;align-items:center}
+.pip{width:7px;height:7px;border-radius:50%}
+.pip-g{background:var(--gold)}.pip-s{background:var(--silver)}.pip-b{background:var(--bronze)}
+
+/* detail panel (overlay) */
+.detail-overlay{position:fixed;top:0;right:-500px;width:460px;height:100vh;background:#0d1525;border-left:1px solid var(--border);z-index:100;display:flex;flex-direction:column;transition:right .3s ease;box-shadow:-8px 0 32px rgba(0,0,0,.5)}
+.detail-overlay.open{right:0}
+.detail-head{padding:16px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.detail-title{font-size:15px;font-weight:600;color:#fff}
+.detail-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.detail-close{background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:0 4px;line-height:1}
+.detail-close:hover{color:#fff}
+.detail-body{flex:1;overflow-y:auto;padding:16px 18px}
+.detail-medals{display:flex;gap:10px;margin-bottom:16px}
+.dm-card{flex:1;background:#0a1020;border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center}
+.dm-num{font-size:20px;font-weight:700}
+.dm-label{font-size:10px;color:var(--muted);margin-top:2px;letter-spacing:.4px}
+.detail-section{margin-bottom:18px}
+.detail-section-title{font-size:10px;font-weight:600;color:var(--blue3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.chart-wrap{position:relative;width:100%}
+.timeline-item{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #0e1622;font-size:12px}
+.tl-year{color:var(--muted);min-width:38px;font-size:11px}
+.tl-comp{color:#e2e8f0;flex:1}
+.tl-event{color:var(--muted);font-size:11px;flex:1}
+.tl-medal{font-size:10px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.bar-label{font-size:11px;color:#e2e8f0;min-width:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;background:#0a1020;border-radius:4px;height:8px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .4s}
+.bar-val{font-size:11px;color:var(--muted);min-width:20px;text-align:right}
+
 @media(max-width:768px){
   html,body{overflow:auto;height:auto}
   main{overflow:auto;flex:none}
@@ -146,12 +184,12 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
   .qual-champ-selector{gap:6px}
   .champ-btn{padding:6px 12px;font-size:11px}
   .qual-table-wrap{flex:none;margin-bottom:.5rem;max-height:60vh}
-  .qual-filters{flex-wrap:wrap}
-  .qs-card{padding:.45rem .8rem}
-  .qs-num{font-size:15px}
+  .qs-card{padding:.45rem .8rem}.qs-num{font-size:15px}
   .table-footer{flex-wrap:wrap;gap:4px}
   .pg-btn{padding:4px 8px;font-size:10px}
   .page-info{font-size:10px;width:100%}
+  .summary-layout{grid-template-columns:1fr;overflow:visible;flex:none}
+  .detail-overlay{width:100%;right:-100%}
 }
 </style>
 </head>
@@ -173,6 +211,7 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
     </div>
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="switchTab('medals',this)">Medals</button>
+      <button class="nav-tab" onclick="switchTab('summary',this)">Medal Summary</button>
       <button class="nav-tab" onclick="switchTab('participants',this)">Participants</button>
       <button class="nav-tab" onclick="switchTab('records',this)">National Records</button>
       <button class="nav-tab" onclick="switchTab('qual',this)">Qualifications - 2026</button>
@@ -238,6 +277,37 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
       </div>
     </div>
   </div>
+</div>
+
+<!-- MEDAL SUMMARY -->
+<div id="tab-summary" class="tab-content">
+  <div class="inner">
+    <div class="page-headline">Medal Summary</div>
+    <div class="summary-layout">
+      <!-- Athletes panel -->
+      <div class="summary-panel">
+        <div class="summary-panel-head">Most Decorated Athletes</div>
+        <div class="summary-list" id="ath-list"></div>
+      </div>
+      <!-- Competitions panel -->
+      <div class="summary-panel">
+        <div class="summary-panel-head">Medals by Competition</div>
+        <div class="summary-list" id="comp-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail overlay -->
+<div class="detail-overlay" id="detail-overlay">
+  <div class="detail-head">
+    <div>
+      <div class="detail-title" id="detail-title"></div>
+      <div class="detail-sub" id="detail-sub"></div>
+    </div>
+    <button class="detail-close" onclick="closeDetail()">&#10005;</button>
+  </div>
+  <div class="detail-body" id="detail-body"></div>
 </div>
 
 <!-- PARTICIPANTS -->
@@ -330,7 +400,7 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
 <!-- QUALIFICATIONS -->
 <div id="tab-qual" class="tab-content">
   <div class="inner">
-          <div class="page-headline">2026 Qualification Standards Tracker</div>
+    <div class="page-headline">2026 Qualification Standards Tracker <span style="font-size:11px;font-weight:400;color:#607080;margin-left:8px">Based on 2026 performances</span></div>
     <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0">
       <div class="qual-champ-selector" style="flex:1">
         <button class="champ-btn active" onclick="qSelectChamp(this,'Asian Games')">Asian Games</button>
@@ -345,7 +415,6 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
         <div class="filter-group" style="min-width:140px"><div class="filter-label">Event</div><select id="q-event" onchange="renderQual()"><option value="">All</option></select></div>
       </div>
     </div>
-    <div class="filters" id="q-filters" style="display:none"></div>
     <div id="q-loading" class="loading">
       <span class="loading-dot">&#9679;</span><span class="loading-dot" style="animation-delay:.2s">&#9679;</span><span class="loading-dot" style="animation-delay:.4s">&#9679;</span>
       <p style="margin-top:.8rem;font-size:12px;letter-spacing:1px">LOADING DATA</p>
@@ -384,460 +453,347 @@ function fetchCSV(url, cb) {
   fetch(url)
     .then(function(r) { return r.text(); })
     .then(function(text) {
-      // skip any leading rows that don't look like real headers
-      // (i.e. rows where the first non-empty cell isn't "Gender" or "Event")
-      var lines = text.split('\n');
-      var startLine = 0;
+      var lines = text.split('\n'), startLine = 0;
       for (var i = 0; i < Math.min(5, lines.length); i++) {
         var cells = lines[i].split(',');
         var first = cells[0].replace(/"/g,'').trim().toLowerCase();
         var second = cells[1] ? cells[1].replace(/"/g,'').trim().toLowerCase() : '';
-        if (first === 'gender' || first === 'event' || second === 'event') {
-          startLine = i; break;
-        }
+        if (first === 'gender' || first === 'event' || second === 'event') { startLine = i; break; }
       }
-      var cleaned = lines.slice(startLine).join('\n');
-      cb(Papa.parse(cleaned, {header:true, skipEmptyLines:true}));
+      cb(Papa.parse(lines.slice(startLine).join('\n'), {header:true, skipEmptyLines:true}));
     })
-    .catch(function() {
-      Papa.parse(url, {download:true, header:true, skipEmptyLines:true, complete:cb});
-    });
+    .catch(function() { Papa.parse(url, {download:true, header:true, skipEmptyLines:true, complete:cb}); });
 }
 
 function fillSelect(id, vals) {
   var s = document.getElementById(id);
-  for (var i = 0; i < vals.length; i++) {
-    var o = document.createElement('option');
-    o.value = vals[i]; o.textContent = vals[i]; s.appendChild(o);
-  }
+  for (var i = 0; i < vals.length; i++) { var o = document.createElement('option'); o.value = vals[i]; o.textContent = vals[i]; s.appendChild(o); }
 }
 
 function renderPgNums(elId, cur, total, fn) {
   var range = [];
-  if (total <= 7) { for (var i = 1; i <= total; i++) range.push(i); }
-  else {
-    range.push(1);
-    if (cur > 3) range.push('e');
-    for (var i = Math.max(2, cur-1); i <= Math.min(total-1, cur+1); i++) range.push(i);
-    if (cur < total-2) range.push('e');
-    range.push(total);
-  }
+  if (total <= 7) { for (var i=1;i<=total;i++) range.push(i); }
+  else { range.push(1); if(cur>3) range.push('e'); for(var i=Math.max(2,cur-1);i<=Math.min(total-1,cur+1);i++) range.push(i); if(cur<total-2) range.push('e'); range.push(total); }
   var html = '';
   for (var i = 0; i < range.length; i++) {
     var p = range[i];
-    if (p === 'e') { html += '<span class="pg-n" style="cursor:default">...</span>'; }
-    else { html += '<button class="pg-n' + (p === cur ? ' active' : '') + '" onclick="' + fn + '(' + p + ')">' + p + '</button>'; }
+    html += p==='e' ? '<span class="pg-n" style="cursor:default">...</span>' : '<button class="pg-n'+(p===cur?' active':'')+'" onclick="'+fn+'('+p+')">'+p+'</button>';
   }
   document.getElementById(elId).innerHTML = html;
 }
 
-function isEmpty(v) { return !v || v.trim() === '' || v.trim() === '-' || v.trim() === '--'; }
+function isEmpty(v) { return !v || v.trim()==='' || v.trim()==='-' || v.trim()==='--'; }
 
 function toggleFilters(prefix) {
-  var panel = document.getElementById(prefix + '-filters');
-  var btn = document.getElementById(prefix + '-filter-btn');
+  var panel = document.getElementById(prefix+'-filters'), btn = document.getElementById(prefix+'-filter-btn');
   if (panel && btn) { panel.classList.toggle('open'); btn.classList.toggle('open'); }
 }
-
 function initFilterVisibility(prefix) {
-  var panel = document.getElementById(prefix + '-filters');
+  var panel = document.getElementById(prefix+'-filters');
   if (panel && !isMobile) panel.style.display = 'flex';
 }
-
 function updateFilterCount(prefix) {
-  var map = {
-    m: ['m-region','m-category','m-environment','m-comp','m-year','m-gender','m-medal','m-event','m-search'],
-    p: ['p-comp','p-year','p-gender','p-event','p-search'],
-    r: ['r-type','r-gender','r-event','r-search']
-  };
-  var count = 0;
-  var ids = map[prefix] || [];
-  for (var i = 0; i < ids.length; i++) {
-    var el = document.getElementById(ids[i]);
-    if (el && el.value && el.value !== '') count++;
-  }
-  var el = document.getElementById(prefix + '-fcount');
-  if (el) el.textContent = count;
+  var map = {m:['m-region','m-category','m-environment','m-comp','m-year','m-gender','m-medal','m-event','m-search'],p:['p-comp','p-year','p-gender','p-event','p-search'],r:['r-type','r-gender','r-event','r-search']};
+  var count = 0, ids = map[prefix]||[];
+  for (var i=0;i<ids.length;i++) { var el=document.getElementById(ids[i]); if(el&&el.value&&el.value!=='') count++; }
+  var el = document.getElementById(prefix+'-fcount'); if(el) el.textContent = count;
 }
 
 function switchTab(name, btn) {
   document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
   document.querySelectorAll('.nav-tab').forEach(function(b) { b.classList.remove('active'); });
-  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
   btn.classList.add('active');
-  if (name === 'participants' && !pLoaded) loadParticipants();
-  if (name === 'records' && !rLoaded) loadRecords();
-  if (name === 'qual' && !qLoaded) loadQual();
-}
-
-// ── PERFORMANCE PARSING ─────────────────────────────────────────
-function parsePerf(s) {
-  if (!s) return null;
-  s = s.toString().trim().replace(/[()]/g, '').trim();
-  // handle MM:SS.ss or H:MM:SS.ss or MM:SS
-  var parts = s.split(':');
-  if (parts.length === 3) {
-    // H:MM:SS.ss
-    return (+parts[0]) * 3600 + (+parts[1]) * 60 + parseFloat(parts[2]);
-  }
-  if (parts.length === 2) {
-    // MM:SS or MM:SS.ss — leading zeros ok (e.g. 01:47.50)
-    return (+parts[0]) * 60 + parseFloat(parts[1]);
-  }
-  var n = parseFloat(s);
-  return isNaN(n) ? null : n;
-}
-
-function isFieldEvent(ev) {
-  return /jump|vault|throw|put|hammer|discus|javelin|shot|triple|long|high|pole/i.test(ev);
-}
-
-// hurdles and throwing events are age-specific (equipment differs)
-function isAgeSpecific(ev) {
-  return /\bh\b|hur|throw|put|hammer|discus|javelin|shot/i.test(ev);
-}
-
-// Normalise event name for matching between the two sheets
-// Strips extra spaces, lowercases, collapses variants like "110mH" vs "110m H"
-function normEvent(ev) {
-  if (!ev) return '';
-  return ev.toString().toLowerCase()
-    .replace(/\s+/g, ' ')
-    .replace(/\s*h$/,'h')          // "400m H" -> "400mh"
-    .replace(/\s*h\s/g,'h ')       // "110m H " -> "110mh "
-    .replace(/\s*sc$/,'sc')        // "3000m SC" -> "3000msc"
-    .replace(/st ch/,'sc')         // "3000m St Ch" -> "3000m sc"
-    .replace(/st\. ch/,'sc')
-    .replace(/\s*rw$/,'rw')        // "20km RW" -> "20kmrw"
-    .replace(/10km rw/,'10000m rw')
-    .replace(/\s/g,'');            // remove all spaces for final compare
-}
-
-function parseAthletes(cell) {
-  if (!cell || cell.trim() === '' || cell.trim() === '-') return [];
-  var results = [];
-  // match: Name (perf) — handles names with spaces, initials, dots
-  var re = /([^,\n(]+?)\s*\(([^)]+)\)/g;
-  var m;
-  while ((m = re.exec(cell)) !== null) {
-    var name = m[1].trim();
-    var perfRaw = m[2].trim();
-    if (name && perfRaw) {
-      results.push({name: name, perfRaw: perfRaw, perfVal: parsePerf(perfRaw)});
-    }
-  }
-  return results;
-}
-
-function meetsStandard(perfVal, stdVal, ev) {
-  if (perfVal === null || stdVal === null || isNaN(perfVal) || isNaN(stdVal)) return false;
-  return isFieldEvent(ev) ? perfVal >= stdVal : perfVal <= stdVal;
-}
-
-function eligibleCols(champ, ev) {
-  var all  = ['Under 16 (2011/2012 DOB)','Under 18 (2009/2010 DOB)','Under 20 (2007/2008 DOB)','Under 23 (2004/2005/2006 DOB)','Seniors'];
-  var u23only = ['Under 23 (2004/2005/2006 DOB)'];
-  var u23s = ['Under 23 (2004/2005/2006 DOB)','Seniors'];
-  var u20  = ['Under 18 (2009/2010 DOB)','Under 20 (2007/2008 DOB)'];
-  var age  = isAgeSpecific(ev);
-  if (champ === 'Asian Games' || champ === 'Commonwealth' || champ === 'National Pool') {
-    return age ? u23s : all;
-  }
-  if (champ === 'Asian U23') return age ? u23only : u23only;
-  if (champ === 'World U20' || champ === 'Asian U20') return u20;
-  return all;
-}
-
-var CHAMP_COL = {
-  'Asian Games':   'Asian Games',
-  'Commonwealth':  'Commonwealth',
-  'Asian U23':     'Asian U23',
-  'National Pool': 'National Pool',
-  'World U20':     'World U20',
-  'Asian U20':     'Asian U20'
-};
-
-// ── QUALIFICATIONS ───────────────────────────────────────────────
-var qStdData = [], qBestData = [], qLoaded = false, qChamp = 'Asian Games';
-
-function loadQual() {
-  var stdDone = false, bestDone = false;
-  fetchCSV(QUAL_STD_URL, function(r) {
-    qStdData = r.data; stdDone = true;
-    if (bestDone) qReady();
-  });
-  fetchCSV(BEST_URL, function(r) {
-    qBestData = r.data; bestDone = true;
-    if (stdDone) qReady();
-  });
-}
-
-function qReady() {
-  qLoaded = true;
-  document.getElementById('q-loading').style.display = 'none';
-  var qc = document.getElementById('q-content');
-  qc.style.display = 'flex';
-  var evSet = {};
-  for (var i = 0; i < qStdData.length; i++) {
-    var ev = qStdData[i]['Event'];
-    if (ev) evSet[ev] = 1;
-  }
-  var evList = Object.keys(evSet).sort();
-  fillSelect('q-event', evList);
-  renderQual();
-}
-
-function qSelectChamp(btn, champ) {
-  document.querySelectorAll('.champ-btn').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
-  qChamp = champ;
-  renderQual();
-}
-
-function renderQual() {
-  if (!qLoaded) return;
-  var gFilter = document.getElementById('q-gender').value || '';
-  var eFilter = document.getElementById('q-event').value || '';
-  var stdCol  = CHAMP_COL[qChamp];
-  var rows = [];
-
-  for (var i = 0; i < qStdData.length; i++) {
-    var stdRow = qStdData[i];
-    var gender = stdRow['Gender'] || '';
-    var ev     = stdRow['Event']  || '';
-    if (gFilter && gender !== gFilter) continue;
-    if (eFilter && ev !== eFilter) continue;
-    var stdRaw = stdRow[stdCol] || '';
-    if (!stdRaw || stdRaw.trim() === '' || stdRaw.trim() === '-') continue;
-    var stdVal = parsePerf(stdRaw);
-
-    // match best row using normalised event name + gender (or just event if no gender col in best sheet)
-    var bestRow = null;
-    var normEv = normEvent(ev);
-    var bestHasGender = qBestData.length > 0 && qBestData[0]['Gender'] !== undefined;
-    for (var j = 0; j < qBestData.length; j++) {
-      var bd = qBestData[j];
-      var evMatch = normEvent(bd['Event']) === normEv;
-      var genMatch = !bestHasGender || !bd['Gender'] || bd['Gender'] === gender;
-      if (evMatch && genMatch) { bestRow = bd; break; }
-    }
-
-    var qualified = [];
-    if (bestRow) {
-      var cols = eligibleCols(qChamp, ev);
-      for (var c = 0; c < cols.length; c++) {
-        var cell = bestRow[cols[c]] || '';
-        var athletes = parseAthletes(cell);
-        for (var a = 0; a < athletes.length; a++) {
-          var ath = athletes[a];
-          if (meetsStandard(ath.perfVal, stdVal, ev)) {
-            var dup = false;
-            for (var d = 0; d < qualified.length; d++) {
-              if (qualified[d].name === ath.name) { dup = true; break; }
-            }
-            if (!dup) qualified.push(ath);
-          }
-        }
-      }
-      qualified.sort(function(a, b) {
-        if (a.perfVal === null) return 1;
-        if (b.perfVal === null) return -1;
-        return isFieldEvent(ev) ? b.perfVal - a.perfVal : a.perfVal - b.perfVal;
-      });
-    }
-    rows.push({gender: gender, ev: ev, stdRaw: stdRaw, qualified: qualified});
-  }
-
-  var eventsWithQual = 0;
-  var athNames = {};
-  for (var i = 0; i < rows.length; i++) {
-    if (rows[i].qualified.length > 0) eventsWithQual++;
-    for (var j = 0; j < rows[i].qualified.length; j++) athNames[rows[i].qualified[j].name] = 1;
-  }
-  document.getElementById('q-s-events').textContent  = eventsWithQual;
-  document.getElementById('q-s-athletes').textContent = Object.keys(athNames).length;
-
-  var html = '';
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var chips = '';
-    if (r.qualified.length > 0) {
-      for (var j = 0; j < r.qualified.length; j++) {
-        var a = r.qualified[j];
-        chips += '<span class="athlete-chip"><span class="chip-name">' + a.name + '</span><span class="chip-perf">' + a.perfRaw + '</span></span>';
-      }
-    } else {
-      chips = '<span class="no-qual">No qualifiers yet</span>';
-    }
-    html += '<tr>'
-      + '<td><span class="gender-' + r.gender + '">' + r.gender + '</span></td>'
-      + '<td>' + r.ev + '</td>'
-      + '<td class="std">' + r.stdRaw + '</td>'
-      + '<td>' + chips + '</td>'
-      + '</tr>';
-  }
-  document.getElementById('q-tbody').innerHTML = html;
+  if (name==='participants' && !pLoaded) loadParticipants();
+  if (name==='records' && !rLoaded) loadRecords();
+  if (name==='qual' && !qLoaded) loadQual();
+  if (name==='summary') renderSummary();
+  closeDetail();
 }
 
 // ── MEDALS ───────────────────────────────────────────────────────
 var mData=[], mFiltered=[], mSortCol='Year', mSortAsc=false, mPage=1;
-fetchCSV(MEDALS_URL, function(r) { mData=r.data; mPopulate(); initFilterVisibility('m'); renderMedals(); });
+fetchCSV(MEDALS_URL, function(r) { mData=r.data; mPopulate(); initFilterVisibility('m'); renderMedals(); renderSummary(); });
 
 function mPopulate() {
-  function uniq(k) {
-    var s={}, arr=[];
-    for(var i=0;i<mData.length;i++){var v=mData[i][k];if(v&&!s[v]){s[v]=1;arr.push(v);}}
-    return arr.sort();
-  }
-  fillSelect('m-region',uniq('Region')); fillSelect('m-category',uniq('Category'));
-  fillSelect('m-environment',uniq('Environment')); fillSelect('m-comp',uniq('Competition'));
-  var yrs={},yarr=[];
-  for(var i=0;i<mData.length;i++){var y=mData[i].Year;if(y&&!yrs[y]){yrs[y]=1;yarr.push(y);}}
-  yarr.sort(function(a,b){return b-a;});
-  fillSelect('m-year',yarr);
+  function uniq(k) { var s={},arr=[]; for(var i=0;i<mData.length;i++){var v=mData[i][k];if(v&&!s[v]){s[v]=1;arr.push(v);}} return arr.sort(); }
+  fillSelect('m-region',uniq('Region')); fillSelect('m-category',uniq('Category')); fillSelect('m-environment',uniq('Environment')); fillSelect('m-comp',uniq('Competition'));
+  var yrs={},yarr=[]; for(var i=0;i<mData.length;i++){var y=mData[i].Year;if(y&&!yrs[y]){yrs[y]=1;yarr.push(y);}} yarr.sort(function(a,b){return b-a;}); fillSelect('m-year',yarr);
   fillSelect('m-gender',uniq('Gender')); fillSelect('m-event',uniq('Event'));
   var ids=['m-region','m-category','m-environment','m-comp','m-year','m-gender','m-medal','m-event'];
-  for(var i=0;i<ids.length;i++){
-    document.getElementById(ids[i]).addEventListener('change', function(){mResetPage();renderMedals();updateFilterCount('m');});
-  }
+  for(var i=0;i<ids.length;i++) { document.getElementById(ids[i]).addEventListener('change', function(){mResetPage();renderMedals();updateFilterCount('m');}); }
 }
-function mVal(id){return document.getElementById(id)?document.getElementById(id).value:'';}
+function mVal(id) { return document.getElementById(id)?document.getElementById(id).value:''; }
 function mGetFiltered() {
   var q=mVal('m-search').toLowerCase();
   return mData.filter(function(d){
-    return (!mVal('m-region')||d.Region===mVal('m-region'))
-      &&(!mVal('m-category')||d.Category===mVal('m-category'))
-      &&(!mVal('m-environment')||d.Environment===mVal('m-environment'))
-      &&(!mVal('m-comp')||d.Competition===mVal('m-comp'))
-      &&(!mVal('m-year')||d.Year==mVal('m-year'))
-      &&(!mVal('m-gender')||d.Gender===mVal('m-gender'))
-      &&(!mVal('m-medal')||d.Medal===mVal('m-medal'))
-      &&(!mVal('m-event')||d.Event===mVal('m-event'))
-      &&(!q||(d.Name||'').toLowerCase().indexOf(q)>=0);
+    return (!mVal('m-region')||d.Region===mVal('m-region'))&&(!mVal('m-category')||d.Category===mVal('m-category'))&&(!mVal('m-environment')||d.Environment===mVal('m-environment'))&&(!mVal('m-comp')||d.Competition===mVal('m-comp'))&&(!mVal('m-year')||d.Year==mVal('m-year'))&&(!mVal('m-gender')||d.Gender===mVal('m-gender'))&&(!mVal('m-medal')||d.Medal===mVal('m-medal'))&&(!mVal('m-event')||d.Event===mVal('m-event'))&&(!q||(d.Name||'').toLowerCase().indexOf(q)>=0);
   });
 }
-function mSort(c){mSortCol===c?mSortAsc=!mSortAsc:(mSortCol=c,mSortAsc=true);mResetPage();renderMedals();}
+function mSort(c) { mSortCol===c?mSortAsc=!mSortAsc:(mSortCol=c,mSortAsc=true); mResetPage(); renderMedals(); }
 function mResetPage(){mPage=1;}
 function mChangePage(d){var t=Math.ceil(mFiltered.length/PER);mPage=Math.max(1,Math.min(t,mPage+d));renderMedals();}
 function mGoPage(p){mPage=p;renderMedals();}
-function renderMedals(){
+function renderMedals() {
   mFiltered=mGetFiltered();
   mFiltered.sort(function(a,b){var va=a[mSortCol]||'',vb=b[mSortCol]||'';if(!isNaN(va)&&!isNaN(vb)){va=+va;vb=+vb;}return mSortAsc?(va>vb?1:-1):(va<vb?1:-1);});
   document.getElementById('m-total').textContent=mFiltered.length;
   document.getElementById('m-gold').textContent=mFiltered.filter(function(d){return d.Medal==='Gold';}).length;
   document.getElementById('m-silver').textContent=mFiltered.filter(function(d){return d.Medal==='Silver';}).length;
   document.getElementById('m-bronze').textContent=mFiltered.filter(function(d){return d.Medal==='Bronze';}).length;
-  var tp=Math.max(1,Math.ceil(mFiltered.length/PER));mPage=Math.min(mPage,tp);
+  var tp=Math.max(1,Math.ceil(mFiltered.length/PER)); mPage=Math.min(mPage,tp);
   var s=(mPage-1)*PER, pg=mFiltered.slice(s,s+PER), html='';
-  for(var i=0;i<pg.length;i++){
-    var d=pg[i];
-    html+='<tr><td>'+(d.Year||'')+'</td><td>'+(d.Competition||'')+'</td><td class="venue">'+(d.Venue||'')+'</td><td class="athlete">'+(d.Name||'')+'</td><td>'+(d.Event||'')+'</td><td><span class="gender-'+d.Gender+'">'+(d.Gender||'')+'</span></td><td><span class="medal-badge medal-'+d.Medal+'"><span class="medal-dot dot-'+d.Medal+'"></span>'+(d.Medal||'')+'</span></td><td class="perf">'+(d.Performance||'')+'</td></tr>';
-  }
+  for(var i=0;i<pg.length;i++){var d=pg[i];html+='<tr><td>'+(d.Year||'')+'</td><td>'+(d.Competition||'')+'</td><td class="venue">'+(d.Venue||'')+'</td><td class="athlete">'+(d.Name||'')+'</td><td>'+(d.Event||'')+'</td><td><span class="gender-'+d.Gender+'">'+(d.Gender||'')+'</span></td><td><span class="medal-badge medal-'+d.Medal+'"><span class="medal-dot dot-'+d.Medal+'"></span>'+(d.Medal||'')+'</span></td><td class="perf">'+(d.Performance||'')+'</td></tr>';}
   document.getElementById('m-tbody').innerHTML=html;
   document.getElementById('m-info').textContent=(s+1)+'--'+Math.min(s+PER,mFiltered.length)+' of '+mFiltered.length+' records';
-  document.getElementById('m-prev').disabled=mPage===1;
-  document.getElementById('m-next').disabled=mPage===tp;
+  document.getElementById('m-prev').disabled=mPage===1; document.getElementById('m-next').disabled=mPage===tp;
   renderPgNums('m-nums',mPage,tp,'mGoPage');
+}
+
+// ── MEDAL SUMMARY ────────────────────────────────────────────────
+var summaryBuilt = false;
+var detailChart = null;
+
+function pipHTML(g,s,b) {
+  var h='', i;
+  for(i=0;i<g;i++) h+='<span class="pip pip-g"></span>';
+  for(i=0;i<s;i++) h+='<span class="pip pip-s"></span>';
+  for(i=0;i<b;i++) h+='<span class="pip pip-b"></span>';
+  return h;
+}
+
+function renderSummary() {
+  if (!mData.length) return;
+
+  // build athlete tally
+  var athMap = {};
+  for (var i=0;i<mData.length;i++) {
+    var d=mData[i], names=d.Name||'';
+    // split relay names by comma or newline
+    var parts = names.split(/,|\n/);
+    for (var p=0;p<parts.length;p++) {
+      var n=parts[p].trim(); if(!n) continue;
+      if(!athMap[n]) athMap[n]={name:n,Gold:0,Silver:0,Bronze:0,medals:[]};
+      athMap[n][d.Medal]=(athMap[n][d.Medal]||0)+1;
+      athMap[n].medals.push(d);
+    }
+  }
+  var athList = [];
+  for (var k in athMap) athList.push(athMap[k]);
+  athList.sort(function(a,b){ var ta=a.Gold*3+a.Silver*2+a.Bronze, tb=b.Gold*3+b.Silver*2+b.Bronze; return tb-ta||b.Gold-a.Gold||b.Silver-a.Silver; });
+
+  var maxAth = athList.length>0 ? (athList[0].Gold+athList[0].Silver+athList[0].Bronze) : 1;
+  var athHTML='';
+  for(var i=0;i<athList.length;i++){
+    var a=athList[i], tot=a.Gold+a.Silver+a.Bronze;
+    athHTML+='<div class="summary-row ath-row" onclick="openAthleteDetail(\''+encodeURIComponent(a.name)+'\')">'
+      +'<div class="rank-num">'+(i+1)+'</div>'
+      +'<div class="ath-name">'+a.name+'</div>'
+      +'<div class="medal-count mc-g">'+a.Gold+'</div>'
+      +'<div class="medal-count mc-s">'+a.Silver+'</div>'
+      +'<div class="medal-count mc-b">'+a.Bronze+'</div>'
+      +'<div class="medal-pips">'+pipHTML(Math.min(a.Gold,5),Math.min(a.Silver,5),Math.min(a.Bronze,5))+'</div>'
+      +'</div>';
+  }
+  document.getElementById('ath-list').innerHTML = athHTML;
+
+  // build competition tally
+  var compMap = {};
+  for (var i=0;i<mData.length;i++) {
+    var d=mData[i], c=d.Competition||'';
+    if(!compMap[c]) compMap[c]={name:c,Gold:0,Silver:0,Bronze:0,medals:[]};
+    compMap[c][d.Medal]=(compMap[c][d.Medal]||0)+1;
+    compMap[c].medals.push(d);
+  }
+  var compList=[];
+  for(var k in compMap) compList.push(compMap[k]);
+  compList.sort(function(a,b){ return (b.Gold+b.Silver+b.Bronze)-(a.Gold+a.Silver+a.Bronze); });
+
+  var compHTML='';
+  for(var i=0;i<compList.length;i++){
+    var c=compList[i];
+    compHTML+='<div class="summary-row comp-row" onclick="openCompDetail(\''+encodeURIComponent(c.name)+'\')">'
+      +'<div class="comp-name">'+c.name+'</div>'
+      +'<div class="medal-count mc-g">'+c.Gold+'</div>'
+      +'<div class="medal-count mc-s">'+c.Silver+'</div>'
+      +'<div class="medal-count mc-b">'+c.Bronze+'</div>'
+      +'<div class="medal-count mc-t">'+(c.Gold+c.Silver+c.Bronze)+'</div>'
+      +'</div>';
+  }
+  document.getElementById('comp-list').innerHTML = compHTML;
+  summaryBuilt = true;
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+  if (detailChart) { detailChart.destroy(); detailChart=null; }
+}
+
+function openAthleteDetail(encodedName) {
+  var name = decodeURIComponent(encodedName);
+  var medals = mData.filter(function(d){ return (d.Name||'').indexOf(name)>=0; });
+  medals.sort(function(a,b){ return (+a.Year)-(+b.Year); });
+
+  var g=0,s=0,b=0;
+  for(var i=0;i<medals.length;i++){ if(medals[i].Medal==='Gold')g++; else if(medals[i].Medal==='Silver')s++; else b++; }
+
+  document.getElementById('detail-title').textContent = name;
+  document.getElementById('detail-sub').textContent = (g+s+b)+' medals  |  '+g+' Gold  '+s+' Silver  '+b+' Bronze';
+
+  // build body
+  var body='';
+  body+='<div class="detail-medals">'
+    +'<div class="dm-card"><div class="dm-num" style="color:var(--gold)">'+g+'</div><div class="dm-label">Gold</div></div>'
+    +'<div class="dm-card"><div class="dm-num" style="color:var(--silver)">'+s+'</div><div class="dm-label">Silver</div></div>'
+    +'<div class="dm-card"><div class="dm-num" style="color:var(--bronze)">'+b+'</div><div class="dm-label">Bronze</div></div>'
+    +'<div class="dm-card"><div class="dm-num" style="color:var(--blue3)">'+(g+s+b)+'</div><div class="dm-label">Total</div></div>'
+    +'</div>';
+
+  // bar chart by competition
+  var byComp={};
+  for(var i=0;i<medals.length;i++){var c=medals[i].Competition||''; byComp[c]=(byComp[c]||0)+1;}
+  var compKeys=Object.keys(byComp).sort(function(a,b){return byComp[b]-byComp[a];});
+  var maxC=compKeys.length?byComp[compKeys[0]]:1;
+  body+='<div class="detail-section"><div class="detail-section-title">Medals by Competition</div>';
+  for(var i=0;i<compKeys.length;i++){
+    var pct=Math.round(byComp[compKeys[i]]/maxC*100);
+    body+='<div class="bar-row"><div class="bar-label">'+compKeys[i]+'</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:var(--blue2)"></div></div><div class="bar-val">'+byComp[compKeys[i]]+'</div></div>';
+  }
+  body+='</div>';
+
+  // timeline
+  body+='<div class="detail-section"><div class="detail-section-title">Medal Timeline</div>';
+  for(var i=0;i<medals.length;i++){
+    var d=medals[i], col=d.Medal==='Gold'?'var(--gold)':d.Medal==='Silver'?'var(--silver)':'var(--bronze)';
+    body+='<div class="timeline-item">'
+      +'<div class="tl-year">'+d.Year+'</div>'
+      +'<div class="tl-comp">'+d.Competition+'</div>'
+      +'<div class="tl-event">'+d.Event+'</div>'
+      +'<span class="medal-badge medal-'+d.Medal+'" style="font-size:10px">'+d.Medal+'</span>'
+      +'</div>';
+  }
+  body+='</div>';
+
+  document.getElementById('detail-body').innerHTML = body;
+  document.getElementById('detail-overlay').classList.add('open');
+}
+
+function openCompDetail(encodedName) {
+  var name = decodeURIComponent(encodedName);
+  var medals = mData.filter(function(d){ return d.Competition===name; });
+  medals.sort(function(a,b){ return (+a.Year)-(+b.Year); });
+
+  var g=0,s=0,b=0;
+  for(var i=0;i<medals.length;i++){ if(medals[i].Medal==='Gold')g++; else if(medals[i].Medal==='Silver')s++; else b++; }
+
+  document.getElementById('detail-title').textContent = name;
+  document.getElementById('detail-sub').textContent = (g+s+b)+' medals across '+[...new Set(medals.map(function(d){return d.Year;}))].length+' editions';
+
+  var body='';
+  body+='<div class="detail-medals">'
+    +'<div class="dm-card"><div class="dm-num" style="color:var(--gold)">'+g+'</div><div class="dm-label">Gold</div></div>'
+    +'<div class="dm-card"><div class="dm-num" style="color:var(--silver)">'+s+'</div><div class="dm-label">Silver</div></div>'
+    +'<div class="dm-card"><div class="dm-num" style="color:var(--bronze)">'+b+'</div><div class="dm-label">Bronze</div></div>'
+    +'<div class="dm-card"><div class="dm-num" style="color:var(--blue3)">'+(g+s+b)+'</div><div class="dm-label">Total</div></div>'
+    +'</div>';
+
+  // top athletes
+  var athMap2={};
+  for(var i=0;i<medals.length;i++){
+    var names=(medals[i].Name||'').split(/,|\n/);
+    for(var p=0;p<names.length;p++){var n=names[p].trim();if(!n)continue;athMap2[n]=(athMap2[n]||0)+1;}
+  }
+  var athArr=[];for(var k in athMap2)athArr.push({name:k,count:athMap2[k]});
+  athArr.sort(function(a,b){return b.count-a.count;});
+  var maxA=athArr.length?athArr[0].count:1;
+  body+='<div class="detail-section"><div class="detail-section-title">Top Athletes</div>';
+  for(var i=0;i<Math.min(10,athArr.length);i++){
+    var pct=Math.round(athArr[i].count/maxA*100);
+    body+='<div class="bar-row"><div class="bar-label">'+athArr[i].name+'</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:var(--blue2)"></div></div><div class="bar-val">'+athArr[i].count+'</div></div>';
+  }
+  body+='</div>';
+
+  // medals by year chart
+  var byYear={};
+  for(var i=0;i<medals.length;i++){var y=medals[i].Year;byYear[y]=(byYear[y]||0)+1;}
+  var yKeys=Object.keys(byYear).sort();
+  body+='<div class="detail-section"><div class="detail-section-title">Medals by Year</div>';
+  body+='<div class="chart-wrap" style="height:160px"><canvas id="comp-year-chart" role="img" aria-label="Medals by year bar chart"></canvas></div></div>';
+
+  // medals by event
+  var byEv={};
+  for(var i=0;i<medals.length;i++){var e=medals[i].Event||'';byEv[e]=(byEv[e]||0)+1;}
+  var evArr=[];for(var k in byEv)evArr.push({ev:k,count:byEv[k]});
+  evArr.sort(function(a,b){return b.count-a.count;});
+  var maxEv=evArr.length?evArr[0].count:1;
+  body+='<div class="detail-section"><div class="detail-section-title">Medals by Event</div>';
+  for(var i=0;i<evArr.length;i++){
+    var pct=Math.round(evArr[i].count/maxEv*100);
+    body+='<div class="bar-row"><div class="bar-label">'+evArr[i].ev+'</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:var(--bronze)"></div></div><div class="bar-val">'+evArr[i].count+'</div></div>';
+  }
+  body+='</div>';
+
+  document.getElementById('detail-body').innerHTML = body;
+  document.getElementById('detail-overlay').classList.add('open');
+
+  // draw year chart after DOM update
+  setTimeout(function(){
+    var canvas=document.getElementById('comp-year-chart');
+    if(!canvas)return;
+    if(detailChart){detailChart.destroy();detailChart=null;}
+    detailChart=new Chart(canvas,{
+      type:'bar',
+      data:{labels:yKeys,datasets:[{data:yKeys.map(function(y){return byYear[y];}),backgroundColor:'#1e88e5',borderRadius:3}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{ticks:{color:'#607080',font:{size:10}},grid:{color:'#1b2d4a'}},y:{ticks:{color:'#607080',font:{size:10},stepSize:1},grid:{color:'#1b2d4a'}}}}
+    });
+  },50);
 }
 
 // ── PARTICIPANTS ─────────────────────────────────────────────────
 var pData=[],pFiltered=[],pCols=[],pVisibleCols=[],pRoundCols=[],pFinalCol=null,pSortCol='Year',pSortAsc=false,pPage=1,pLoaded=false;
 function loadParticipants(){
-  fetchCSV(PART_URL, function(r){
-    pData=r.data; pLoaded=true;
-    document.getElementById('p-loading').style.display='none';
-    document.getElementById('p-table-wrap').style.display='flex';
+  fetchCSV(PART_URL,function(r){
+    pData=r.data;pLoaded=true;
+    document.getElementById('p-loading').style.display='none';document.getElementById('p-table-wrap').style.display='flex';
     if(!pData.length)return;
     pCols=Object.keys(pData[0]);
     pRoundCols=pCols.filter(function(c){return /heat|qual|quarter|semi|final/i.test(c);});
     pFinalCol=null;
     for(var i=0;i<pCols.length;i++){if(/^final$/i.test(pCols[i].trim())){pFinalCol=pCols[i];break;}}
     if(!pFinalCol){for(var i=pCols.length-1;i>=0;i--){if(/final/i.test(pCols[i])&&!/semi|quarter/i.test(pCols[i])){pFinalCol=pCols[i];break;}}}
-    pBuildTable(); pPopulate(); initFilterVisibility('p'); renderParticipants();
+    pBuildTable();pPopulate();initFilterVisibility('p');renderParticipants();
   });
 }
 function pBuildTable(){
   var yearKey=null,compKey=null,cityKey=null,athKey=null,evKey=null,genKey=null,heatKey=null,qfKey=null,sfKey=null;
-  for(var i=0;i<pCols.length;i++){
-    var c=pCols[i];
-    if(!yearKey&&/year/i.test(c))yearKey=c;
-    if(!compKey&&/^comp$/i.test(c.trim()))compKey=c;
-    if(!compKey&&/comp/i.test(c)&&!/competition/i.test(c))compKey=c;
-    if(!cityKey&&/city|venue/i.test(c))cityKey=c;
-    if(!athKey&&/athlete|name/i.test(c))athKey=c;
-    if(!evKey&&/event/i.test(c))evKey=c;
-    if(!genKey&&/gender/i.test(c))genKey=c;
-    if(!heatKey&&/heat|qual/i.test(c))heatKey=c;
-    if(!qfKey&&/quarter/i.test(c))qfKey=c;
-    if(!sfKey&&/semi/i.test(c))sfKey=c;
-  }
+  for(var i=0;i<pCols.length;i++){var c=pCols[i];if(!yearKey&&/year/i.test(c))yearKey=c;if(!compKey&&/^comp$/i.test(c.trim()))compKey=c;if(!compKey&&/comp/i.test(c)&&!/competition/i.test(c))compKey=c;if(!cityKey&&/city|venue/i.test(c))cityKey=c;if(!athKey&&/athlete|name/i.test(c))athKey=c;if(!evKey&&/event/i.test(c))evKey=c;if(!genKey&&/gender/i.test(c))genKey=c;if(!heatKey&&/heat|qual/i.test(c))heatKey=c;if(!qfKey&&/quarter/i.test(c))qfKey=c;if(!sfKey&&/semi/i.test(c))sfKey=c;}
   var ordered=[yearKey,compKey,cityKey,athKey,evKey,genKey,heatKey,qfKey,sfKey,pFinalCol];
-  var seen={};
-  pVisibleCols=[];
+  var seen={};pVisibleCols=[];
   for(var i=0;i<ordered.length;i++){if(ordered[i]&&!seen[ordered[i]]){seen[ordered[i]]=1;pVisibleCols.push(ordered[i]);}}
-  var tbl=document.getElementById('p-table');
-  var cg=document.createElement('colgroup');
-  for(var i=0;i<pVisibleCols.length;i++){
-    var c=pVisibleCols[i], col=document.createElement('col');
-    if(/year/i.test(c))col.style.width='50px';
-    else if(/^comp$/i.test(c.trim()))col.style.width='52px';
-    else if(/city|venue/i.test(c))col.style.width='95px';
-    else if(/athlete|name/i.test(c))col.style.width='155px';
-    else if(/event/i.test(c))col.style.width='125px';
-    else if(/gender/i.test(c))col.style.width='58px';
-    else if(/heat|qual/i.test(c))col.style.width='135px';
-    else if(/quarter/i.test(c))col.style.width='105px';
-    else if(/semi/i.test(c))col.style.width='90px';
-    else if(/final/i.test(c))col.style.width='105px';
-    else col.style.width='95px';
-    cg.appendChild(col);
-  }
+  var tbl=document.getElementById('p-table');var cg=document.createElement('colgroup');
+  for(var i=0;i<pVisibleCols.length;i++){var c=pVisibleCols[i],col=document.createElement('col');if(/year/i.test(c))col.style.width='50px';else if(/^comp$/i.test(c.trim()))col.style.width='52px';else if(/city|venue/i.test(c))col.style.width='95px';else if(/athlete|name/i.test(c))col.style.width='155px';else if(/event/i.test(c))col.style.width='125px';else if(/gender/i.test(c))col.style.width='58px';else if(/heat|qual/i.test(c))col.style.width='135px';else if(/quarter/i.test(c))col.style.width='105px';else if(/semi/i.test(c))col.style.width='90px';else if(/final/i.test(c))col.style.width='105px';else col.style.width='95px';cg.appendChild(col);}
   tbl.insertBefore(cg,tbl.firstChild);
-  var hhtml='';
-  for(var i=0;i<pVisibleCols.length;i++){hhtml+='<th onclick="pSort(\''+pVisibleCols[i]+'\')">'+pVisibleCols[i]+'<span class="sa">&#8597;</span></th>';}
-  document.getElementById('p-thead-row').innerHTML=hhtml;
+  var hh='';for(var i=0;i<pVisibleCols.length;i++){hh+='<th onclick="pSort(\''+pVisibleCols[i]+'\')">'+pVisibleCols[i]+'<span class="sa">&#8597;</span></th>';}
+  document.getElementById('p-thead-row').innerHTML=hh;
 }
 function pPopulate(){
   var compKey=null,yearKey=null,genKey=null,evKey=null;
-  for(var i=0;i<pCols.length;i++){
-    var c=pCols[i];
-    if(!compKey&&/^competition$/i.test(c.trim()))compKey=c;
-    if(!compKey&&/competition/i.test(c))compKey=c;
-    if(!yearKey&&/year/i.test(c))yearKey=c;
-    if(!genKey&&/gender/i.test(c))genKey=c;
-    if(!evKey&&/event/i.test(c))evKey=c;
-  }
+  for(var i=0;i<pCols.length;i++){var c=pCols[i];if(!compKey&&/^competition$/i.test(c.trim()))compKey=c;if(!compKey&&/competition/i.test(c))compKey=c;if(!yearKey&&/year/i.test(c))yearKey=c;if(!genKey&&/gender/i.test(c))genKey=c;if(!evKey&&/event/i.test(c))evKey=c;}
   function uniq(k){var s={},arr=[];for(var i=0;i<pData.length;i++){var v=pData[i][k];if(v&&!s[v]){s[v]=1;arr.push(v);}}return arr.sort();}
   if(compKey)fillSelect('p-comp',uniq(compKey));
   if(yearKey){var s={},arr=[];for(var i=0;i<pData.length;i++){var v=pData[i][yearKey];if(v&&!s[v]){s[v]=1;arr.push(v);}}arr.sort(function(a,b){return b-a;});fillSelect('p-year',arr);}
-  if(genKey)fillSelect('p-gender',uniq(genKey));
-  if(evKey)fillSelect('p-event',uniq(evKey));
-  var ids=['p-comp','p-year','p-gender','p-event'];
-  for(var i=0;i<ids.length;i++){document.getElementById(ids[i]).addEventListener('change',function(){pResetPage();renderParticipants();updateFilterCount('p');});}
+  if(genKey)fillSelect('p-gender',uniq(genKey));if(evKey)fillSelect('p-event',uniq(evKey));
+  var ids=['p-comp','p-year','p-gender','p-event'];for(var i=0;i<ids.length;i++){document.getElementById(ids[i]).addEventListener('change',function(){pResetPage();renderParticipants();updateFilterCount('p');});}
 }
 function pGetFiltered(){
   var compKey=null,yearKey=null,genKey=null,evKey=null,athKey=null;
-  for(var i=0;i<pCols.length;i++){
-    var c=pCols[i];
-    if(!compKey&&/^competition$/i.test(c.trim()))compKey=c;
-    if(!compKey&&/competition/i.test(c))compKey=c;
-    if(!yearKey&&/year/i.test(c))yearKey=c;
-    if(!genKey&&/gender/i.test(c))genKey=c;
-    if(!evKey&&/event/i.test(c))evKey=c;
-    if(!athKey&&/athlete|name/i.test(c))athKey=c;
-  }
-  var vc=document.getElementById('p-comp').value, vy=document.getElementById('p-year').value;
-  var vg=document.getElementById('p-gender').value, ve=document.getElementById('p-event').value;
-  var q=document.getElementById('p-search').value.toLowerCase();
-  return pData.filter(function(d){
-    return (!vc||!compKey||d[compKey]===vc)&&(!vy||!yearKey||d[yearKey]==vy)
-      &&(!vg||!genKey||d[genKey]===vg)&&(!ve||!evKey||d[evKey]===ve)
-      &&(!q||!athKey||(d[athKey]||'').toLowerCase().indexOf(q)>=0);
-  });
+  for(var i=0;i<pCols.length;i++){var c=pCols[i];if(!compKey&&/^competition$/i.test(c.trim()))compKey=c;if(!compKey&&/competition/i.test(c))compKey=c;if(!yearKey&&/year/i.test(c))yearKey=c;if(!genKey&&/gender/i.test(c))genKey=c;if(!evKey&&/event/i.test(c))evKey=c;if(!athKey&&/athlete|name/i.test(c))athKey=c;}
+  var vc=document.getElementById('p-comp').value,vy=document.getElementById('p-year').value,vg=document.getElementById('p-gender').value,ve=document.getElementById('p-event').value,q=document.getElementById('p-search').value.toLowerCase();
+  return pData.filter(function(d){return(!vc||!compKey||d[compKey]===vc)&&(!vy||!yearKey||d[yearKey]==vy)&&(!vg||!genKey||d[genKey]===vg)&&(!ve||!evKey||d[evKey]===ve)&&(!q||!athKey||(d[athKey]||'').toLowerCase().indexOf(q)>=0);});
 }
 function getRoundClass(col,val,row){
-  var qfCol=null,sfCol=null;
-  for(var i=0;i<pCols.length;i++){if(!qfCol&&/quarter/i.test(pCols[i]))qfCol=pCols[i];if(!sfCol&&/semi/i.test(pCols[i]))sfCol=pCols[i];}
+  var qfCol=null,sfCol=null;for(var i=0;i<pCols.length;i++){if(!qfCol&&/quarter/i.test(pCols[i]))qfCol=pCols[i];if(!sfCol&&/semi/i.test(pCols[i]))sfCol=pCols[i];}
   function hasVal(c){return c&&row[c]&&row[c].trim()!==''&&row[c].trim()!=='-';}
   if(/heat|qual/i.test(col)){if(!isEmpty(val)&&(hasVal(qfCol)||hasVal(sfCol)||hasVal(pFinalCol)))return 'round progressed';return 'round'+(isEmpty(val)?' empty':'');}
   if(/quarter/i.test(col)){if(!isEmpty(val)&&(hasVal(sfCol)||hasVal(pFinalCol)))return 'round progressed';return 'round'+(isEmpty(val)?' empty':'');}
@@ -846,77 +802,92 @@ function getRoundClass(col,val,row){
   return 'round'+(isEmpty(val)?' empty':'');
 }
 function pSort(c){pSortCol===c?pSortAsc=!pSortAsc:(pSortCol=c,pSortAsc=true);pResetPage();renderParticipants();}
-function pResetPage(){pPage=1;}
-function pChangePage(d){var t=Math.ceil(pFiltered.length/PER);pPage=Math.max(1,Math.min(t,pPage+d));renderParticipants();}
-function pGoPage(p){pPage=p;renderParticipants();}
+function pResetPage(){pPage=1;}function pChangePage(d){var t=Math.ceil(pFiltered.length/PER);pPage=Math.max(1,Math.min(t,pPage+d));renderParticipants();}function pGoPage(p){pPage=p;renderParticipants();}
 function renderParticipants(){
   pFiltered=pGetFiltered();
   pFiltered.sort(function(a,b){var va=a[pSortCol]||'',vb=b[pSortCol]||'';if(!isNaN(va)&&!isNaN(vb)){va=+va;vb=+vb;}return pSortAsc?(va>vb?1:-1):(va<vb?1:-1);});
-  var tp=Math.max(1,Math.ceil(pFiltered.length/PER));pPage=Math.min(pPage,tp);
-  var s=(pPage-1)*PER,pg=pFiltered.slice(s,s+PER);
-  var genKey=null,athKey=null;
-  for(var i=0;i<pCols.length;i++){if(!genKey&&/gender/i.test(pCols[i]))genKey=pCols[i];if(!athKey&&/athlete|name/i.test(pCols[i]))athKey=pCols[i];}
+  var tp=Math.max(1,Math.ceil(pFiltered.length/PER));pPage=Math.min(pPage,tp);var s=(pPage-1)*PER,pg=pFiltered.slice(s,s+PER);
+  var genKey=null,athKey=null;for(var i=0;i<pCols.length;i++){if(!genKey&&/gender/i.test(pCols[i]))genKey=pCols[i];if(!athKey&&/athlete|name/i.test(pCols[i]))athKey=pCols[i];}
   var html='';
-  for(var i=0;i<pg.length;i++){
-    var row=pg[i]; html+='<tr>';
-    for(var j=0;j<pVisibleCols.length;j++){
-      var c=pVisibleCols[j],val=row[c]||'';
-      if(c===athKey)html+='<td class="athlete">'+val+'</td>';
-      else if(c===genKey)html+='<td><span class="gender-'+val+'">'+val+'</span></td>';
-      else if(pRoundCols.indexOf(c)>=0){var cls=getRoundClass(c,val,row);html+='<td class="'+cls+'">'+(isEmpty(val)?'--':val)+'</td>';}
-      else html+='<td>'+val+'</td>';
-    }
-    html+='</tr>';
-  }
+  for(var i=0;i<pg.length;i++){var row=pg[i];html+='<tr>';for(var j=0;j<pVisibleCols.length;j++){var c=pVisibleCols[j],val=row[c]||'';if(c===athKey)html+='<td class="athlete">'+val+'</td>';else if(c===genKey)html+='<td><span class="gender-'+val+'">'+val+'</span></td>';else if(pRoundCols.indexOf(c)>=0){var cls=getRoundClass(c,val,row);html+='<td class="'+cls+'">'+(isEmpty(val)?'--':val)+'</td>';}else html+='<td>'+val+'</td>';}html+='</tr>';}
   document.getElementById('p-tbody').innerHTML=html;
   document.getElementById('p-info').textContent=(s+1)+'--'+Math.min(s+PER,pFiltered.length)+' of '+pFiltered.length+' records';
-  document.getElementById('p-prev').disabled=pPage===1; document.getElementById('p-next').disabled=pPage===tp;
+  document.getElementById('p-prev').disabled=pPage===1;document.getElementById('p-next').disabled=pPage===tp;
   renderPgNums('p-nums',pPage,tp,'pGoPage');
 }
 
 // ── NATIONAL RECORDS ─────────────────────────────────────────────
 var rData=[],rFiltered=[],rSortCol='Event',rSortAsc=true,rPage=1,rLoaded=false;
 function loadRecords(){
-  fetchCSV(RECORDS_URL, function(r){
-    rData=r.data; rLoaded=true;
-    document.getElementById('r-loading').style.display='none';
-    document.getElementById('r-table-wrap').style.display='flex';
-    rPopulate(); initFilterVisibility('r'); renderRecords();
-  });
+  fetchCSV(RECORDS_URL,function(r){rData=r.data;rLoaded=true;document.getElementById('r-loading').style.display='none';document.getElementById('r-table-wrap').style.display='flex';rPopulate();initFilterVisibility('r');renderRecords();});
 }
 function rPopulate(){
   function uniq(k){var s={},arr=[];for(var i=0;i<rData.length;i++){var v=rData[i][k];if(v&&!s[v]){s[v]=1;arr.push(v);}}return arr.sort();}
-  fillSelect('r-type',uniq('Record Type')); fillSelect('r-gender',uniq('Gender')); fillSelect('r-event',uniq('Event'));
-  var typeEl=document.getElementById('r-type'), genEl=document.getElementById('r-gender');
+  fillSelect('r-type',uniq('Record Type'));fillSelect('r-gender',uniq('Gender'));fillSelect('r-event',uniq('Event'));
+  var typeEl=document.getElementById('r-type'),genEl=document.getElementById('r-gender');
   for(var i=0;i<typeEl.options.length;i++){if(typeEl.options[i].value==='National Record'){typeEl.options[i].selected=true;break;}}
   for(var i=0;i<genEl.options.length;i++){if(genEl.options[i].value==='Men'){genEl.options[i].selected=true;break;}}
-  var ids=['r-type','r-gender','r-event'];
-  for(var i=0;i<ids.length;i++){document.getElementById(ids[i]).addEventListener('change',function(){rResetPage();renderRecords();updateFilterCount('r');});}
+  var ids=['r-type','r-gender','r-event'];for(var i=0;i<ids.length;i++){document.getElementById(ids[i]).addEventListener('change',function(){rResetPage();renderRecords();updateFilterCount('r');});}
 }
 function rGetFiltered(){
-  var vt=document.getElementById('r-type').value, vg=document.getElementById('r-gender').value;
-  var ve=document.getElementById('r-event').value, q=document.getElementById('r-search').value.toLowerCase();
-  return rData.filter(function(d){
-    return (!vt||d['Record Type']===vt)&&(!vg||d['Gender']===vg)&&(!ve||d['Event']===ve)&&(!q||(d['Athlete']||'').toLowerCase().indexOf(q)>=0);
-  });
+  var vt=document.getElementById('r-type').value,vg=document.getElementById('r-gender').value,ve=document.getElementById('r-event').value,q=document.getElementById('r-search').value.toLowerCase();
+  return rData.filter(function(d){return(!vt||d['Record Type']===vt)&&(!vg||d['Gender']===vg)&&(!ve||d['Event']===ve)&&(!q||(d['Athlete']||'').toLowerCase().indexOf(q)>=0);});
 }
 function rSort(c){rSortCol===c?rSortAsc=!rSortAsc:(rSortCol=c,rSortAsc=true);rResetPage();renderRecords();}
-function rResetPage(){rPage=1;}
-function rChangePage(d){var t=Math.ceil(rFiltered.length/PER);rPage=Math.max(1,Math.min(t,rPage+d));renderRecords();}
-function rGoPage(p){rPage=p;renderRecords();}
+function rResetPage(){rPage=1;}function rChangePage(d){var t=Math.ceil(rFiltered.length/PER);rPage=Math.max(1,Math.min(t,rPage+d));renderRecords();}function rGoPage(p){rPage=p;renderRecords();}
 function renderRecords(){
   rFiltered=rGetFiltered();
   rFiltered.sort(function(a,b){var oa=+(a['Order']||9999),ob=+(b['Order']||9999);if(oa!==ob)return oa-ob;var va=a[rSortCol]||'',vb=b[rSortCol]||'';if(!isNaN(va)&&!isNaN(vb)){va=+va;vb=+vb;}return rSortAsc?(va>vb?1:-1):(va<vb?1:-1);});
-  var tp=Math.max(1,Math.ceil(rFiltered.length/PER));rPage=Math.min(rPage,tp);
-  var s=(rPage-1)*PER,pg=rFiltered.slice(s,s+PER),html='';
-  for(var i=0;i<pg.length;i++){
-    var d=pg[i];
-    html+='<tr><td>'+(d['Record Type']||'')+'</td><td>'+(d['Event']||'')+'</td><td><span class="gender-'+d['Gender']+'">'+(d['Gender']||'')+'</span></td><td class="perf">'+(d['Performance']||'')+'</td><td class="athlete">'+(d['Athlete']||'')+'</td><td class="venue">'+(d['Venue']||'')+'</td><td>'+(d['Date']||'')+'</td></tr>';
-  }
+  var tp=Math.max(1,Math.ceil(rFiltered.length/PER));rPage=Math.min(rPage,tp);var s=(rPage-1)*PER,pg=rFiltered.slice(s,s+PER),html='';
+  for(var i=0;i<pg.length;i++){var d=pg[i];html+='<tr><td>'+(d['Record Type']||'')+'</td><td>'+(d['Event']||'')+'</td><td><span class="gender-'+d['Gender']+'">'+(d['Gender']||'')+'</span></td><td class="perf">'+(d['Performance']||'')+'</td><td class="athlete">'+(d['Athlete']||'')+'</td><td class="venue">'+(d['Venue']||'')+'</td><td>'+(d['Date']||'')+'</td></tr>';}
   document.getElementById('r-tbody').innerHTML=html;
   document.getElementById('r-info').textContent=(s+1)+'--'+Math.min(s+PER,rFiltered.length)+' of '+rFiltered.length+' records';
-  document.getElementById('r-prev').disabled=rPage===1; document.getElementById('r-next').disabled=rPage===tp;
+  document.getElementById('r-prev').disabled=rPage===1;document.getElementById('r-next').disabled=rPage===tp;
   renderPgNums('r-nums',rPage,tp,'rGoPage');
+}
+
+// ── QUALIFICATIONS ────────────────────────────────────────────────
+var qStdData=[],qBestData=[],qLoaded=false,qChamp='Asian Games';
+function loadQual(){
+  var stdDone=false,bestDone=false;
+  fetchCSV(QUAL_STD_URL,function(r){qStdData=r.data;stdDone=true;if(bestDone)qReady();});
+  fetchCSV(BEST_URL,function(r){qBestData=r.data;bestDone=true;if(stdDone)qReady();});
+}
+function qReady(){
+  qLoaded=true;document.getElementById('q-loading').style.display='none';
+  var qc=document.getElementById('q-content');qc.style.display='flex';
+  var evSet={};for(var i=0;i<qStdData.length;i++){var ev=qStdData[i]['Event'];if(ev)evSet[ev]=1;}
+  fillSelect('q-event',Object.keys(evSet).sort());renderQual();
+}
+function qSelectChamp(btn,champ){document.querySelectorAll('.champ-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');qChamp=champ;renderQual();}
+function parsePerf(s){if(!s)return null;s=s.toString().trim().replace(/[()]/g,'').trim();var parts=s.split(':');if(parts.length===3)return(+parts[0])*3600+(+parts[1])*60+parseFloat(parts[2]);if(parts.length===2)return(+parts[0])*60+parseFloat(parts[1]);var n=parseFloat(s);return isNaN(n)?null:n;}
+function isFieldEvent(ev){return /jump|vault|throw|put|hammer|discus|javelin|shot|triple|long|high|pole/i.test(ev);}
+function isAgeSpecific(ev){return /\bh\b|hur|throw|put|hammer|discus|javelin|shot/i.test(ev);}
+function normEvent(ev){if(!ev)return '';return ev.toString().toLowerCase().replace(/\s+/g,' ').replace(/\s*h$/,'h').replace(/\s*h\s/g,'h ').replace(/\s*sc$/,'sc').replace(/st ch/,'sc').replace(/st\. ch/,'sc').replace(/\s*rw$/,'rw').replace(/10km rw/,'10000m rw').replace(/\s/g,'');}
+function parseAthletes(cell){if(!cell||cell.trim()===''||cell.trim()==='-')return[];var results=[],re=/([^,\n(]+?)\s*\(([^)]+)\)/g,m;while((m=re.exec(cell))!==null){var name=m[1].trim(),perfRaw=m[2].trim();if(name&&perfRaw)results.push({name:name,perfRaw:perfRaw,perfVal:parsePerf(perfRaw)});}return results;}
+function meetsStandard(perfVal,stdVal,ev){if(perfVal===null||stdVal===null||isNaN(perfVal)||isNaN(stdVal))return false;return isFieldEvent(ev)?perfVal>=stdVal:perfVal<=stdVal;}
+function eligibleCols(champ,ev){var all=['Under 16 (2011/2012 DOB)','Under 18 (2009/2010 DOB)','Under 20 (2007/2008 DOB)','Under 23 (2004/2005/2006 DOB)','Seniors'],u23only=['Under 23 (2004/2005/2006 DOB)'],u23s=['Under 23 (2004/2005/2006 DOB)','Seniors'],u20=['Under 18 (2009/2010 DOB)','Under 20 (2007/2008 DOB)'],age=isAgeSpecific(ev);if(champ==='Asian Games'||champ==='Commonwealth'||champ==='National Pool')return age?u23s:all;if(champ==='Asian U23')return u23only;if(champ==='World U20'||champ==='Asian U20')return u20;return all;}
+var CHAMP_COL={'Asian Games':'Asian Games','Commonwealth':'Commonwealth','Asian U23':'Asian U23','National Pool':'National Pool','World U20':'World U20','Asian U20':'Asian U20'};
+function renderQual(){
+  if(!qLoaded)return;
+  var gFilter=document.getElementById('q-gender').value||'',eFilter=document.getElementById('q-event').value||'',stdCol=CHAMP_COL[qChamp],rows=[];
+  for(var i=0;i<qStdData.length;i++){
+    var stdRow=qStdData[i],gender=stdRow['Gender']||'',ev=stdRow['Event']||'';
+    if(gFilter&&gender!==gFilter)continue;if(eFilter&&ev!==eFilter)continue;
+    var stdRaw=stdRow[stdCol]||'';if(!stdRaw||stdRaw.trim()===''||stdRaw.trim()==='-')continue;
+    var stdVal=parsePerf(stdRaw),bestRow=null,normEv=normEvent(ev);
+    var bestHasGender=qBestData.length>0&&qBestData[0]['Gender']!==undefined;
+    for(var j=0;j<qBestData.length;j++){var bd=qBestData[j];if(normEvent(bd['Event'])===normEv&&(!bestHasGender||!bd['Gender']||bd['Gender']===gender)){bestRow=bd;break;}}
+    var qualified=[];
+    if(bestRow){var cols=eligibleCols(qChamp,ev);for(var c=0;c<cols.length;c++){var cell=bestRow[cols[c]]||'',athletes=parseAthletes(cell);for(var a=0;a<athletes.length;a++){var ath=athletes[a];if(meetsStandard(ath.perfVal,stdVal,ev)){var dup=false;for(var d=0;d<qualified.length;d++){if(qualified[d].name===ath.name){dup=true;break;}}if(!dup)qualified.push(ath);}}}qualified.sort(function(a,b){if(a.perfVal===null)return 1;if(b.perfVal===null)return -1;return isFieldEvent(ev)?b.perfVal-a.perfVal:a.perfVal-b.perfVal;});}
+    rows.push({gender:gender,ev:ev,stdRaw:stdRaw,qualified:qualified});
+  }
+  var eventsWithQual=0,athNames={};
+  for(var i=0;i<rows.length;i++){if(rows[i].qualified.length>0)eventsWithQual++;for(var j=0;j<rows[i].qualified.length;j++)athNames[rows[i].qualified[j].name]=1;}
+  document.getElementById('q-s-events').textContent=eventsWithQual;document.getElementById('q-s-athletes').textContent=Object.keys(athNames).length;
+  var html='';
+  for(var i=0;i<rows.length;i++){var r=rows[i],chips='';if(r.qualified.length>0){for(var j=0;j<r.qualified.length;j++){var a=r.qualified[j];chips+='<span class="athlete-chip"><span class="chip-name">'+a.name+'</span><span class="chip-perf">'+a.perfRaw+'</span></span>';}}else{chips='<span class="no-qual">No qualifiers yet</span>';}html+='<tr><td><span class="gender-'+r.gender+'">'+r.gender+'</span></td><td>'+r.ev+'</td><td class="std">'+r.stdRaw+'</td><td>'+chips+'</td></tr>';}
+  document.getElementById('q-tbody').innerHTML=html;
 }
 </script>
 </body>
