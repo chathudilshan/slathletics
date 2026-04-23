@@ -165,22 +165,45 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
 .bar-val{font-size:11px;color:var(--muted);min-width:18px;text-align:right}
 #r-tbody tr:hover td:last-child{color:var(--blue3);}
 #r-tbody tr:hover{background:#111a2a;border-left:2px solid var(--blue3)}
+/* mobile sidebar */
+.mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200}
+.mob-sidebar{position:fixed;top:0;left:-280px;width:260px;height:100vh;background:#080d18;border-right:1px solid var(--border);z-index:201;display:flex;flex-direction:column;transition:left .25s ease}
+.mob-sidebar.open{left:0}
+.mob-overlay.open{display:block}
+.mob-sidebar-head{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;border-bottom:1px solid var(--border);flex-shrink:0}
+.mob-sidebar-logo{font-size:15px;font-weight:700;letter-spacing:2px;color:#fff}
+.mob-sidebar-close{background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;padding:0}
+.mob-sidebar-close:hover{color:#fff}
+.mob-nav-list{padding:1rem 0;flex:1;overflow-y:auto}
+.mob-nav-item{display:flex;align-items:center;gap:12px;padding:.85rem 1.2rem;color:var(--muted);font-size:14px;cursor:pointer;border-left:3px solid transparent;transition:all .15s}
+.mob-nav-item:hover{background:#0d1525;color:#e2e8f0}
+.mob-nav-item.active{color:var(--blue3);border-left-color:var(--blue3);background:#0d1525}
+.mob-nav-icon{width:18px;height:18px;flex-shrink:0;opacity:.6}
+.mob-nav-item.active .mob-nav-icon{opacity:1}
+.mob-hamburger{display:none;background:transparent;border:none;cursor:pointer;padding:6px;color:#e2e8f0;flex-shrink:0}
+.mob-hamburger svg{width:22px;height:22px}
+.mob-tab-title{font-size:13px;font-weight:600;color:var(--blue3);padding:.6rem 1.2rem .3rem;letter-spacing:.5px;text-transform:uppercase}
+
 @media(max-width:768px){
   html,body{overflow:auto;height:auto}
   main{overflow:auto;flex:none}
   .tab-content{overflow:auto;flex:none}
   .tab-content.active{display:block}
   header{padding:0 1rem}
-  .header-inner{flex-wrap:wrap}
-  .logo{border-right:none;padding:.6rem 0;flex:1}
+  .header-inner{gap:8px}
+  .logo{border-right:none;padding:.65rem 0;flex:1}
   .logo-text{font-size:15px;letter-spacing:2px}
+  .logo-sub{font-size:8px}
   .logo-emblem{width:30px;height:30px}
-  .lk-badge{width:30px;height:30px;font-size:10px}
-  .nav-tabs{padding:.5rem 0 .6rem;width:100%;border-top:1px solid var(--border);order:3;gap:5px;flex-wrap:wrap}
-  .nav-tab{padding:5px 12px;font-size:11px}
+  .nav-tabs{display:none}
+  .lk-badge{display:none}
+  .mob-hamburger{display:flex;align-items:center;justify-content:center}
   .inner{padding:.8rem 1rem;gap:8px;overflow:visible;flex:none}
+  .page-headline{font-size:13px}
   .stats-grid{grid-template-columns:repeat(2,1fr);gap:8px}
   .stat-num{font-size:18px}
+  .stat-icon{width:28px;height:28px;font-size:13px}
+  .stat-label{font-size:9px}
   .filter-toggle-btn{display:flex;align-items:center;justify-content:space-between;width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.6rem .9rem;color:#e2e8f0;font-size:13px;cursor:pointer;flex-shrink:0}
   .filter-toggle-btn .ftb-label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500}
   .filter-toggle-btn .ftb-arrow{font-size:10px;color:var(--muted);transition:transform .2s}
@@ -191,24 +214,32 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
   .filter-row.f8{grid-template-columns:repeat(2,1fr)}
   .filter-row.f4{grid-template-columns:repeat(2,1fr)}
   .table-wrap{border-radius:10px;flex:none;margin-bottom:.5rem}
-  .table-scroll{overflow-x:auto;overflow-y:auto;max-height:55vh;flex:none}
-  table{table-layout:auto;min-width:700px}
-  td,thead th{padding:7px 10px;font-size:11px}
+  .table-scroll{overflow-x:auto;overflow-y:auto;max-height:52vh;flex:none}
+  table{table-layout:auto;min-width:600px}
+  td,thead th{padding:6px 8px;font-size:11px}
   .summary-layout{grid-template-columns:1fr;overflow:visible;flex:none}
-  .summary-panel{max-height:50vh}
+  .summary-panel{max-height:48vh}
   .detail-overlay{width:100%;right:-100%}
   .qual-champ-selector{gap:6px}
-  .champ-btn{padding:6px 12px;font-size:11px}
-  .qual-table-wrap{flex:none;margin-bottom:.5rem;max-height:60vh}
+  .champ-btn{padding:5px 10px;font-size:11px}
+  .qual-table-wrap{flex:none;margin-bottom:.5rem;max-height:55vh}
+  .qs-card{padding:.4rem .8rem}
+  .qs-num{font-size:15px}
   .table-footer{flex-wrap:wrap;gap:4px}
   .pg-btn{padding:4px 8px;font-size:10px}
   .page-info{font-size:10px;width:100%}
+  .qual-summary{gap:8px}
 }
 </style>
 </head>
 <body>
 <header>
   <div class="header-inner">
+    <button class="mob-hamburger" onclick="openSidebar()" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
     <div class="logo">
       <div class="logo-emblem">
         <svg viewBox="0 0 24 24" fill="none">
@@ -232,6 +263,34 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
     <div class="lk-badge">LK</div>
   </div>
 </header>
+
+<!-- Mobile sidebar -->
+<div class="mob-overlay" id="mob-overlay" onclick="closeSidebar()"></div>
+<div class="mob-sidebar" id="mob-sidebar">
+  <div class="mob-sidebar-head">
+    <div class="mob-sidebar-logo">SLATHLETICS</div>
+    <button class="mob-sidebar-close" onclick="closeSidebar()">&#10005;</button>
+  </div>
+  <div class="mob-nav-list">
+    <div class="mob-tab-title">Navigation</div>
+    <div class="mob-nav-item active" id="mob-nav-medals" onclick="mobSwitchTab('medals')">
+      <svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="5"/><path d="M8 14l-2 7h12l-2-7"/></svg>
+      Medals
+    </div>
+    <div class="mob-nav-item" id="mob-nav-summary" onclick="mobSwitchTab('summary')">
+      <svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Medal Summary
+    </div>
+    <div class="mob-nav-item" id="mob-nav-records" onclick="mobSwitchTab('records')">
+      <svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      National Records
+    </div>
+    <div class="mob-nav-item" id="mob-nav-qual" onclick="mobSwitchTab('qual')">
+      <svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+      Qualifications 2026
+    </div>
+  </div>
+</div>
 <main>
 
 <!-- MEDALS -->
@@ -438,6 +497,30 @@ var BEST_URL     = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQeB6A8k_i3m
 
 var isMobile = window.innerWidth <= 768;
 window.addEventListener('resize', function() { isMobile = window.innerWidth <= 768; });
+
+function openSidebar() {
+  document.getElementById('mob-sidebar').classList.add('open');
+  document.getElementById('mob-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.getElementById('mob-sidebar').classList.remove('open');
+  document.getElementById('mob-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function mobSwitchTab(name) {
+  document.querySelectorAll('.mob-nav-item').forEach(function(el){el.classList.remove('active');});
+  var el = document.getElementById('mob-nav-'+name);
+  if (el) el.classList.add('active');
+  var fakeBtn = {classList:{add:function(){},remove:function(){}}};
+  switchTab(name, fakeBtn);
+  // sync desktop nav too
+  document.querySelectorAll('.nav-tab').forEach(function(b){
+    b.classList.remove('active');
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').indexOf("'"+name+"'")>=0) b.classList.add('active');
+  });
+  closeSidebar();
+}
 
 // ── shared helpers ────────────────────────────────────────────────
 function fetchCSV(url, cb) {
