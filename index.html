@@ -149,10 +149,11 @@ td.round.medal3{background:#2a1800;color:var(--bronze);border-left:2px solid var
 .detail-section{margin-bottom:16px}
 .detail-section-title{font-size:10px;font-weight:600;color:var(--blue3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
 .chart-wrap{position:relative;width:100%}
-.timeline-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #0e1622;font-size:12px}
-.tl-year{color:var(--muted);min-width:38px;font-size:11px;flex-shrink:0}
-.tl-comp{color:#e2e8f0;flex:1;font-size:11px}
-.tl-event{color:var(--muted);font-size:11px;flex:1}
+.timeline-item{display:grid;grid-template-columns:42px 1fr 1fr 70px;align-items:start;gap:8px;padding:7px 0;border-bottom:1px solid #0e1622;font-size:12px}
+.tl-year{color:var(--muted);font-size:11px;flex-shrink:0}
+.tl-comp{color:#e2e8f0;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl-event{color:var(--muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl-badge{display:flex;justify-content:flex-end;flex-shrink:0}
 .detail-filters{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .df-btn{background:#0a1020;border:1px solid var(--border);color:var(--muted);padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;transition:all .15s}
 .df-btn:hover{color:#e2e8f0;border-color:var(--blue2)}
@@ -699,7 +700,7 @@ function openAthleteDetail(enc) {
   body+='<div class="detail-section"><div class="detail-section-title">Medals by Competition</div><div class="chart-wrap" style="height:'+(cKeys.length*36+40)+'px"><canvas id="ath-comp-chart" role="img" aria-label="Medals by competition"></canvas></div></div>';
 
   body+='<div class="detail-section"><div class="detail-section-title">Medal Timeline</div>';
-  for (var i=0;i<medals.length;i++){var d=medals[i];body+='<div class="timeline-item"><div class="tl-year">'+d.Year+'</div><div class="tl-comp">'+d.Competition+'</div><div class="tl-event">'+d.Event+'</div><span class="medal-badge medal-'+d.Medal+'">'+d.Medal+'</span></div>';}
+  for (var i=0;i<medals.length;i++){var d=medals[i];body+='<div class="timeline-item"><div class="tl-year">'+d.Year+'</div><div class="tl-comp">'+d.Competition+'</div><div class="tl-event">'+d.Event+'</div><div class="tl-badge"><span class="medal-badge medal-'+d.Medal+'">'+d.Medal+'</span></div></div>';}
   body+='</div>';
 
   document.getElementById('detail-body').innerHTML=body;
@@ -748,7 +749,7 @@ function renderCompDetailBody(name) {
   body+='</div>';
 
   body+='<div class="detail-section"><div class="detail-section-title">Medal Timeline</div>';
-  for (var i=0;i<medals.length;i++){var d=medals[i];body+='<div class="timeline-item"><div class="tl-year">'+d.Year+'</div><div class="tl-comp" style="flex:1.5">'+d.Event+'</div><div class="tl-event">'+d.Name+'</div><span class="medal-badge medal-'+d.Medal+'">'+d.Medal+'</span></div>';}
+  for (var i=0;i<medals.length;i++){var d=medals[i];body+='<div class="timeline-item"><div class="tl-year">'+d.Year+'</div><div class="tl-comp" style="flex:1.5">'+d.Event+'</div><div class="tl-event">'+d.Name+'</div><div class="tl-badge"><span class="medal-badge medal-'+d.Medal+'">'+d.Medal+'</span></div></div>';}
   body+='</div>';
 
   document.getElementById('detail-body').innerHTML=body;
