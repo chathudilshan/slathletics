@@ -711,9 +711,9 @@ function openAthleteDetail(enc) {
 }
 
 function openCompDetail(enc) {
-  var name=decodeURIComponent(enc);
+  window._currentCompName = decodeURIComponent(enc);
   compDetailMedalFilter='All'; compDetailGenderFilter='All'; compDetailCategoryFilter='All';
-  renderCompDetailBody(name);
+  renderCompDetailBody(window._currentCompName);
   document.getElementById('detail-overlay').classList.add('open');
 }
 
