@@ -631,7 +631,7 @@ function renderMedals() {
 
 // ── MEDAL SUMMARY ─────────────────────────────────────────────────
 var athData=[], compData=[], detailChart=null, athSortMode='total';
-var compDetailMedalFilter='All', compDetailGenderFilter='All';
+var compDetailMedalFilter='All', compDetailGenderFilter='All', compDetailCategoryFilter='All';
 
 function setAthSort(mode) {
   athSortMode=mode;
@@ -712,7 +712,7 @@ function openAthleteDetail(enc) {
 
 function openCompDetail(enc) {
   var name=decodeURIComponent(enc);
-  compDetailMedalFilter='All'; compDetailGenderFilter='All';
+  compDetailMedalFilter='All'; compDetailGenderFilter='All'; compDetailCategoryFilter='All';
   renderCompDetailBody(name);
   document.getElementById('detail-overlay').classList.add('open');
 }
@@ -758,9 +758,10 @@ function renderCompDetailBody(name) {
   },50);
 }
 
-function setCompFilter(medal, gender, enc) {
+function setCompFilter(medal, gender, category, enc) {
   if (medal!==null) compDetailMedalFilter=medal;
   if (gender!==null) compDetailGenderFilter=gender;
+  if (category!==null) compDetailCategoryFilter=category;
   if (detailChart) { detailChart.destroy(); detailChart=null; }
   renderCompDetailBody(decodeURIComponent(enc));
 }
