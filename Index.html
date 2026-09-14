@@ -301,14 +301,14 @@ td.round.medal3{background:#45230a;color:#ffb877;border-left:2px solid #f0a05a}
     <button class="filter-toggle-btn" id="m-filter-btn" onclick="toggleFilters('m')"><span class="ftb-label">&#9776; Filters <span class="filter-count" id="m-fcount">0</span></span><span class="ftb-arrow">&#9660;</span></button>
     <div class="filters" id="m-filters">
       <div class="filter-row f8">
-        <div class="filter-group"><div class="filter-label">Region</div><select id="m-region"><option value="">All</option></select></div>
-        <div class="filter-group"><div class="filter-label">Category</div><select id="m-category"><option value="">All</option></select></div>
-        <div class="filter-group"><div class="filter-label">Environment</div><select id="m-environment"><option value="">All</option></select></div>
-        <div class="filter-group"><div class="filter-label">Competition</div><select id="m-comp"><option value="">All</option></select></div>
-        <div class="filter-group"><div class="filter-label">Year</div><select id="m-year"><option value="">All</option></select></div>
-        <div class="filter-group"><div class="filter-label">Gender</div><select id="m-gender"><option value="">All</option></select></div>
-        <div class="filter-group"><div class="filter-label">Medal</div><select id="m-medal"><option value="">All</option><option>Gold</option><option>Silver</option><option>Bronze</option></select></div>
-        <div class="filter-group"><div class="filter-label">Event</div><select id="m-event"><option value="">All</option></select></div>
+        <div class="filter-group"><div class="filter-label">Region</div><div class="ms"><button class="ms-btn" id="ms-btn-region" onclick="msToggle('region',event)"><span class="ms-txt" id="ms-txt-region">All</span><span class="ms-arrow">&#9660;</span></button><div class="ms-panel" id="ms-panel-region"></div></div></div>
+        <div class="filter-group"><div class="filter-label">Category</div><div class="ms"><button class="ms-btn" id="ms-btn-category" onclick="msToggle('category',event)"><span class="ms-txt" id="ms-txt-category">All</span><span class="ms-arrow">&#9660;</span></button><div class="ms-panel" id="ms-panel-category"></div></div></div>
+        <div class="filter-group"><div class="filter-label">Environment</div><div class="ms"><button class="ms-btn" id="ms-btn-environment" onclick="msToggle('environment',event)"><span class="ms-txt" id="ms-txt-environment">All</span><span class="ms-arrow">&#9660;</span></button><div class="ms-panel" id="ms-panel-environment"></div></div></div>
+        <div class="filter-group"><div class="filter-label">Competition</div><div class="ms"><button class="ms-btn" id="ms-btn-comp" onclick="msToggle('comp',event)"><span class="ms-txt" id="ms-txt-comp">All</span><span class="ms-arrow">&#9660;</span></button><div class="ms-panel" id="ms-panel-comp"></div></div></div>
+        <div class="filter-group"><div class="filter-label">Year</div><div class="ms"><button class="ms-btn" id="ms-btn-year" onclick="msToggle('year',event)"><span class="ms-txt" id="ms-txt-year">All</span><span class="ms-arrow">&#9660;</span></button><div class="ms-panel" id="ms-panel-year"></div></div></div>
+        <div class="filter-group"><div class="filter-label">Gender</div><div class="ms"><button class="ms-btn" id="ms-btn-gender" onclick="msToggle('gender',event)"><span class="ms-txt" id="ms-txt-gender">All</span><span class="ms-arrow">&#9660;</span></button><div class="ms-panel" id="ms-panel-gender"></div></div></div>
+        <div class="filter-group"><div class="filter-label">Medal</div><div class="ms"><button class="ms-btn" id="ms-btn-medal" onclick="msToggle('medal',event)"><span class="ms-txt" id="ms-txt-medal">All</span><span class="ms-arrow">&#9660;</span></button><div class="ms-panel" id="ms-panel-medal"></div></div></div>
+        <div class="filter-group"><div class="filter-label">Event</div><div class="ms"><button class="ms-btn" id="ms-btn-event" onclick="msToggle('event',event)"><span class="ms-txt" id="ms-txt-event">All</span><span class="ms-arrow">&#9660;</span></button><div class="ms-panel" id="ms-panel-event"></div></div></div>
       </div>
       <div class="filter-row f1"><div class="filter-group"><div class="filter-label">Search athlete</div><input id="m-search" placeholder="e.g. Duncan White..." oninput="mResetPage();renderMedals();updateFilterCount('m')"></div></div>
     </div>
@@ -543,16 +543,21 @@ function initFilterVisibility(prefix) {
 }
 
 function updateFilterCount(prefix) {
-  var map = {
-    m: ['m-region','m-category','m-environment','m-comp','m-year','m-gender','m-medal','m-event','m-search'],
-    p: ['p-comp','p-year','p-gender','p-event','p-search'],
-    r: ['r-type','r-gender','r-event','r-search']
-  };
-  var ids = map[prefix] || [];
   var count = 0;
-  for (var i = 0; i < ids.length; i++) {
-    var el = document.getElementById(ids[i]);
-    if (el && el.value && el.value !== '') count++;
+  if (prefix === 'm') {
+    for (var key in mSel) { if (mSel[key].length) count++; }
+    var se = document.getElementById('m-search');
+    if (se && se.value) count++;
+  } else {
+    var map = {
+      p: ['p-comp','p-year','p-gender','p-event','p-search'],
+      r: ['r-type','r-gender','r-event','r-search']
+    };
+    var ids = map[prefix] || [];
+    for (var i = 0; i < ids.length; i++) {
+      var el = document.getElementById(ids[i]);
+      if (el && el.value && el.value !== '') count++;
+    }
   }
   var out = document.getElementById(prefix + '-fcount');
   if (out) out.textContent = count;
@@ -613,6 +618,86 @@ fetchCSV(MEDALS_URL, function(r) {
   renderSummary();
 });
 
+var mSel = { region: [], category: [], environment: [], comp: [], year: [], gender: [], medal: [], event: [] };
+var mField = { region: 'Region', category: 'Category', environment: 'Environment', comp: 'Competition', year: 'Year', gender: 'Gender', medal: 'Medal', event: 'Event' };
+
+function msFill(key, vals) {
+  var panel = document.getElementById('ms-panel-' + key);
+  if (!panel) return;
+  var html = '<input class="ms-search" placeholder="Search..." oninput="msFilterOpts(\'' + key + '\',this.value)">';
+  html += '<div class="ms-list" id="ms-list-' + key + '">';
+  if (!vals.length) html += '<div class="ms-none">No options</div>';
+  for (var i = 0; i < vals.length; i++) {
+    var v = String(vals[i]);
+    var esc = v.replace(/"/g, '&quot;');
+    html += '<label class="ms-opt" data-val="' + esc.toLowerCase() + '">' +
+      '<input type="checkbox" value="' + esc + '" onchange="msPick(\'' + key + '\',this)">' +
+      '<span>' + v + '</span></label>';
+  }
+  html += '</div>';
+  html += '<div class="ms-foot"><button class="ms-link" onclick="msClear(\'' + key + '\')">Clear</button>' +
+    '<button class="ms-link" onclick="msClosePanel(\'' + key + '\')">Done</button></div>';
+  panel.innerHTML = html;
+}
+
+function msFilterOpts(key, q) {
+  q = (q || '').toLowerCase();
+  var opts = document.querySelectorAll('#ms-list-' + key + ' .ms-opt');
+  for (var i = 0; i < opts.length; i++) {
+    var v = opts[i].getAttribute('data-val') || '';
+    opts[i].style.display = (!q || v.indexOf(q) >= 0) ? 'flex' : 'none';
+  }
+}
+
+function msLabel(key) {
+  var arr = mSel[key];
+  var txt = document.getElementById('ms-txt-' + key);
+  var btn = document.getElementById('ms-btn-' + key);
+  if (!txt || !btn) return;
+  if (!arr.length) { txt.textContent = 'All'; btn.classList.remove('has-sel'); }
+  else if (arr.length === 1) { txt.textContent = arr[0]; btn.classList.add('has-sel'); }
+  else { txt.textContent = arr.length + ' selected'; btn.classList.add('has-sel'); }
+}
+
+function msPick(key, cb) {
+  var arr = mSel[key];
+  var idx = arr.indexOf(cb.value);
+  if (cb.checked) { if (idx < 0) arr.push(cb.value); }
+  else if (idx >= 0) { arr.splice(idx, 1); }
+  msLabel(key);
+  mResetPage(); renderMedals(); updateFilterCount('m');
+}
+
+function msClear(key) {
+  mSel[key] = [];
+  var boxes = document.querySelectorAll('#ms-panel-' + key + ' input[type=checkbox]');
+  for (var i = 0; i < boxes.length; i++) boxes[i].checked = false;
+  msLabel(key);
+  mResetPage(); renderMedals(); updateFilterCount('m');
+}
+
+function msCloseAll() {
+  var ps = document.querySelectorAll('.ms-panel');
+  for (var i = 0; i < ps.length; i++) ps[i].classList.remove('open');
+}
+
+function msClosePanel(key) {
+  var p = document.getElementById('ms-panel-' + key);
+  if (p) p.classList.remove('open');
+}
+
+function msToggle(key, ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  var panel = document.getElementById('ms-panel-' + key);
+  var wasOpen = panel.classList.contains('open');
+  msCloseAll();
+  if (!wasOpen) panel.classList.add('open');
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target || !e.target.closest || !e.target.closest('.ms')) msCloseAll();
+});
+
 function mPopulate() {
   function uniq(k) {
     var seen = {}, arr = [];
@@ -622,43 +707,31 @@ function mPopulate() {
     }
     return arr.sort();
   }
-  fillSelect('m-region', uniq('Region'));
-  fillSelect('m-category', uniq('Category'));
-  fillSelect('m-environment', uniq('Environment'));
-  fillSelect('m-comp', uniq('Competition'));
+  msFill('region', uniq('Region'));
+  msFill('category', uniq('Category'));
+  msFill('environment', uniq('Environment'));
+  msFill('comp', uniq('Competition'));
   var ys = {}, ya = [];
   for (var i = 0; i < mData.length; i++) {
     var y = mData[i].Year;
-    if (y && !ys[y]) { ys[y] = 1; ya.push(y); }
+    if (y && !ys[y]) { ys[y] = 1; ya.push(String(y)); }
   }
   ya.sort(function(a, b) { return b - a; });
-  fillSelect('m-year', ya);
-  fillSelect('m-gender', uniq('Gender'));
-  fillSelect('m-event', uniq('Event'));
-  var ids = ['m-region','m-category','m-environment','m-comp','m-year','m-gender','m-medal','m-event'];
-  for (var j = 0; j < ids.length; j++) {
-    document.getElementById(ids[j]).addEventListener('change', function() {
-      mResetPage(); renderMedals(); updateFilterCount('m');
-    });
-  }
-}
-
-function mVal(id) {
-  var el = document.getElementById(id);
-  return el ? el.value : '';
+  msFill('year', ya);
+  msFill('gender', uniq('Gender'));
+  msFill('medal', ['Gold', 'Silver', 'Bronze']);
+  msFill('event', uniq('Event'));
+  for (var key in mSel) msLabel(key);
 }
 
 function mGetFiltered() {
-  var q = mVal('m-search').toLowerCase();
+  var searchEl = document.getElementById('m-search');
+  var q = searchEl ? searchEl.value.toLowerCase() : '';
   return mData.filter(function(d) {
-    if (mVal('m-region') && d.Region !== mVal('m-region')) return false;
-    if (mVal('m-category') && d.Category !== mVal('m-category')) return false;
-    if (mVal('m-environment') && d.Environment !== mVal('m-environment')) return false;
-    if (mVal('m-comp') && d.Competition !== mVal('m-comp')) return false;
-    if (mVal('m-year') && String(d.Year) !== mVal('m-year')) return false;
-    if (mVal('m-gender') && d.Gender !== mVal('m-gender')) return false;
-    if (mVal('m-medal') && d.Medal !== mVal('m-medal')) return false;
-    if (mVal('m-event') && d.Event !== mVal('m-event')) return false;
+    for (var key in mField) {
+      var sel = mSel[key];
+      if (sel.length && sel.indexOf(String(d[mField[key]] || '')) < 0) return false;
+    }
     if (q && (d.Name || '').toLowerCase().indexOf(q) < 0) return false;
     return true;
   });
